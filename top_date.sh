@@ -51,13 +51,24 @@ cleanup() {
     exit 0
 }
 
-# Función para mostrar el histograma
+# Función para mostrar el histograma (sin parpadeo)
 show_histogram() {
-    clear
-    echo -e "${GREEN}=== Top Fechas en tiempo real ===${NC}"
-    echo -e "${YELLOW}Teclas: [1] date  [2] time  [Ctrl+C] salir${NC}"
-    echo ""
-    sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N"
+    local output
+    local histogram
+
+    # Pre-computar el histograma
+    histogram=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N")
+
+    # Construir todo el output en una variable
+    output=$(printf '\033[H\033[J')  # Clear screen (ANSI escape)
+    output+=$(echo -e "${GREEN}=== Top Fechas en tiempo real ===${NC}")
+    output+=$'\n'
+    output+=$(echo -e "${YELLOW}Teclas: [1] date  [2] time  [Ctrl+C] salir${NC}")
+    output+=$'\n\n'
+    output+="$histogram"
+
+    # Mostrar todo de una vez
+    printf '%s\n' "$output"
 }
 
 # Función para ejecutar comando externo
