@@ -71,20 +71,23 @@ show_histogram() {
     printf '%s\n' "$output"
 }
 
-# Función para ejecutar comando externo
+# Función para ejecutar comando externo y salir
 run_external_command() {
     local cmd="$1"
 
-    # Limpiar pantalla y mostrar resultado
+    # Limpiar recursos antes de salir
+    if [[ -n "$TAIL_PID" ]] && kill -0 "$TAIL_PID" 2>/dev/null; then
+        kill "$TAIL_PID" 2>/dev/null || true
+    fi
+    [[ -f "$TEMP_FILE" ]] && rm -f "$TEMP_FILE"
+
+    # Desactivar trap para evitar mensajes de limpieza
+    trap - SIGINT SIGTERM EXIT
+
+    # Limpiar pantalla y ejecutar comando
     clear
-    echo -e "${GREEN}=== Ejecutando: $cmd ===${NC}"
-    echo ""
-
     eval "$cmd"
-
-    echo ""
-    echo -e "${YELLOW}Presiona cualquier tecla para continuar...${NC}"
-    read -n 1 -s
+    exit 0
 }
 
 # Configurar trap para capturar Ctrl+C y otras señales
