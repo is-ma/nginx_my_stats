@@ -57,6 +57,15 @@ declare -A PERIOD_TITLE=(
     [complete]="log completo"
 )
 
+declare -A MODE_HEADER=(
+    [date]="Fecha"
+    [ip]="IP"
+    [method]="Método"
+    [status]="Status"
+    [ua]="User Agent"
+    [uri]="URI"
+)
+
 # Función de limpieza
 cleanup() {
     stty echo 2>/dev/null || true
@@ -131,6 +140,8 @@ show_histogram() {
     output+=$'\n'
     output+="[Ctrl+C] salir"
     output+=$'\n\n'
+    output+="     #  ${MODE_HEADER[$CURRENT_MODE]}"
+    output+=$'\n'
     output+="$histogram"
 
     printf '%s\n' "$output"
