@@ -8,6 +8,7 @@
 #
 # Uso: top_date
 # Salir: Ctrl+C (limpia automáticamente)
+# Teclas: 1 = ejecutar 'date', 2 = ejecutar 'time'
 # =================================================
 
 set -euo pipefail
@@ -29,6 +30,9 @@ TAIL_PID=""
 
 # Función de limpieza
 cleanup() {
+    # Restaurar configuración del terminal
+    stty echo 2>/dev/null || true
+
     echo -e "\n${YELLOW}Limpiando...${NC}"
 
     # Matar el proceso tail si existe
@@ -45,6 +49,31 @@ cleanup() {
 
     echo -e "${GREEN}¡Listo!${NC}"
     exit 0
+}
+
+# Función para mostrar el histograma
+show_histogram() {
+    clear
+    echo -e "${GREEN}=== Top Fechas en tiempo real ===${NC}"
+    echo -e "${YELLOW}Teclas: [1] date  [2] time  [Ctrl+C] salir${NC}"
+    echo ""
+    sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N"
+}
+
+# Función para ejecutar comando externo
+run_external_command() {
+    local cmd="$1"
+
+    # Limpiar pantalla y mostrar resultado
+    clear
+    echo -e "${GREEN}=== Ejecutando: $cmd ===${NC}"
+    echo ""
+
+    eval "$cmd"
+
+    echo ""
+    echo -e "${YELLOW}Presiona cualquier tecla para continuar...${NC}"
+    read -n 1 -s
 }
 
 # Configurar trap para capturar Ctrl+C y otras señales
@@ -67,8 +96,19 @@ fi
 sudo tail -f "$LOG_FILE" | jq --unbuffered -r '.date' >> "$TEMP_FILE" &
 TAIL_PID=$!
 
-# Iniciar el watch con el histograma
-watch -n "$REFRESH_INTERVAL" "sort '$TEMP_FILE' | uniq -c | sort -nr | head -n $TOP_N"
+# Loop principal interactivo (reemplaza watch)
+while true; do
+    show_histogram
 
-# Esta línea normalmente no se alcanza porque watch bloquea,
-# pero si watch termina por alguna razón, el trap se encarga de la limpieza
+    # Leer tecla con timeout (permite refrescar automáticamente)
+    if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
+        case "$key" in
+            1)
+                run_external_command "date"
+                ;;
+            2)
+                run_external_command "time"
+                ;;
+        esac
+    fi
+done
