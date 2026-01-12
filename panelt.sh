@@ -66,19 +66,51 @@ cleanup() {
     exit 0
 }
 
+# Función para formatear opción (mayúsculas si activa)
+format_option() {
+    local key="$1"
+    local label="$2"
+    local current="$3"
+    local match="$4"
+
+    if [[ "$current" == "$match" ]]; then
+        echo "[${key^^}] ${label^^}"
+    else
+        echo "[$key] $label"
+    fi
+}
+
 # Función para mostrar el histograma (sin parpadeo)
 show_histogram() {
     local output
     local histogram
+    local prop_line
+    local period_line
 
     histogram=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N")
+
+    # Construir línea de propiedades
+    prop_line="Propiedad: "
+    prop_line+="$(format_option d date "$CURRENT_MODE" date)  "
+    prop_line+="$(format_option i ip "$CURRENT_MODE" ip)  "
+    prop_line+="$(format_option m method "$CURRENT_MODE" method)  "
+    prop_line+="$(format_option s status "$CURRENT_MODE" status)  "
+    prop_line+="$(format_option a agent "$CURRENT_MODE" ua)  "
+    prop_line+="$(format_option u uri "$CURRENT_MODE" uri)"
+
+    # Construir línea de periodos
+    period_line="Periodo: "
+    period_line+="$(format_option n now "$CURRENT_PERIOD" now)  "
+    period_line+="$(format_option h hundred "$CURRENT_PERIOD" hundred)  "
+    period_line+="$(format_option t thousand "$CURRENT_PERIOD" thousand)  "
+    period_line+="$(format_option c complete "$CURRENT_PERIOD" complete)"
 
     output=$(printf '\033[H\033[J')
     output+="=== ${MODE_TITLE[$CURRENT_MODE]} (${PERIOD_TITLE[$CURRENT_PERIOD]}) ==="
     output+=$'\n'
-    output+="Propiedad: [d] date  [i] ip  [m] method  [s] status  [a] agent  [u] uri"
+    output+="$prop_line"
     output+=$'\n'
-    output+="Periodo: [n] now  [h] hundred  [t] thousand  [c] complete"
+    output+="$period_line"
     output+=$'\n'
     output+="[Ctrl+C] salir"
     output+=$'\n\n'
