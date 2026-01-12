@@ -11,7 +11,7 @@
 # Salir: Ctrl+C
 # =================================================
 
-set -euo pipefail
+set -uo pipefail
 
 # Configuración
 LOG_FILE="/var/log/nginx/shield_access.log"
@@ -148,13 +148,9 @@ switch_mode() {
     fi
 }
 
-# Función para cambiar de periodo
+# Función para cambiar de periodo (siempre recomputa)
 switch_period() {
     local new_period="$1"
-
-    if [[ "$new_period" == "$CURRENT_PERIOD" ]]; then
-        return
-    fi
 
     stop_tail
     CURRENT_PERIOD="$new_period"
