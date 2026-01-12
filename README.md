@@ -49,9 +49,9 @@ Agrega esto a tu `~/.bashrc` para acceso rápido:
 
 ```bash
 # Nginx Stats Tools
-alias topua='/home/deploy/.is-ma/nginx_my_stats/top_ua.sh'
-alias topips='/home/deploy/.is-ma/nginx_my_stats/top_ips.sh'
-alias topstatus='/home/deploy/.is-ma/nginx_my_stats/top_status.sh'
+alias tua='/home/deploy/.is-ma/nginx_my_stats/top_ua.sh'
+alias tip='/home/deploy/.is-ma/nginx_my_stats/top_ip.sh'
+alias tstatus='/home/deploy/.is-ma/nginx_my_stats/top_status.sh'
 ```
 
 Luego recarga tu configuración:
@@ -64,9 +64,9 @@ source ~/.bashrc
 Simplemente ejecuta cualquiera de los comandos:
 
 ```bash
-topua      # Ver User Agents en tiempo real
-topip     # Ver IPs en tiempo real
-topstatus  # Ver Status Codes en tiempo real
+tua      # Ver User Agents en tiempo real
+tip      # Ver IPs en tiempo real
+tstatus  # Ver Status Codes en tiempo real
 ```
 
 ### Salir
@@ -77,10 +77,10 @@ Presiona `Ctrl+C` para salir. El script automáticamente:
 
 ## 🎯 Ejemplo de Uso Real
 
-Después de implementar un nuevo `robots.txt`, puedes usar `topua` para verificar que los bots están respetando las reglas:
+Después de implementar un nuevo `robots.txt`, puedes usar `tua` para verificar que los bots están respetando las reglas:
 
 ```bash
-$ topua
+$ tua
 
 Iniciando monitor de User Agents...
 Log: /var/log/nginx/shield_access.log
