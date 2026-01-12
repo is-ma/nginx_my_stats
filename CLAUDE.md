@@ -12,6 +12,7 @@ nginx_my_stats is a suite of bash scripts for real-time monitoring of Nginx serv
 - `top_ip.sh` - Monitor IP addresses (extracts `.ip` field)
 - `top_status.sh` - Monitor HTTP status codes (extracts `.status` field)
 - `top_date.sh` - Monitor dates (extracts `.date` field)
+- `top_method.sh` - Monitor HTTP methods (extracts `.method` field)
 
 ## Running the Scripts
 
@@ -20,6 +21,7 @@ nginx_my_stats is a suite of bash scripts for real-time monitoring of Nginx serv
 ./top_ip.sh       # IP addresses histogram
 ./top_status.sh   # HTTP status codes histogram
 ./top_date.sh     # Dates histogram
+./top_method.sh   # HTTP methods histogram
 ```
 
 All scripts require `sudo` to read Nginx logs. Press `Ctrl+C` to exit (cleanup is automatic).
@@ -54,3 +56,4 @@ Scripts expect JSON-formatted logs with these fields:
 - `ip` - Client IP address
 - `status` - HTTP status code
 - `date` - Request date
+- `method` - HTTP method (GET, POST, etc.)

@@ -39,6 +39,14 @@ Muestra un histograma actualizado en tiempo real de las fechas de las peticiones
 - Identificar picos de actividad
 - Analizar patrones temporales
 
+### `top_method.sh` - Monitor de Métodos HTTP
+Muestra un histograma actualizado en tiempo real de los métodos HTTP (GET, POST, PUT, DELETE, etc.).
+
+**Útil para:**
+- Ver distribución de tipos de peticiones
+- Detectar actividad inusual (muchos DELETE, PUT, etc.)
+- Monitorear APIs REST
+
 ## 🚀 Instalación
 
 ### Requisitos
@@ -61,6 +69,7 @@ alias tua='/home/deploy/.is-ma/nginx_my_stats/top_ua.sh'
 alias tip='/home/deploy/.is-ma/nginx_my_stats/top_ip.sh'
 alias tstatus='/home/deploy/.is-ma/nginx_my_stats/top_status.sh'
 alias tdate='/home/deploy/.is-ma/nginx_my_stats/top_date.sh'
+alias tmethod='/home/deploy/.is-ma/nginx_my_stats/top_method.sh'
 ```
 
 Luego recarga tu configuración:
@@ -77,6 +86,7 @@ tua      # Ver User Agents en tiempo real
 tip      # Ver IPs en tiempo real
 tstatus  # Ver Status Codes en tiempo real
 tdate    # Ver Fechas en tiempo real
+tmethod  # Ver Métodos HTTP en tiempo real
 ```
 
 ### Salir
@@ -121,7 +131,7 @@ TOP_N=30                                     # Cantidad de resultados a mostrar
 ### ¿Cómo funciona?
 
 1. **Inicia un `tail -f`** en background que lee el log continuamente
-2. **Extrae el campo deseado** usando `jq` (ua, ip, status, date)
+2. **Extrae el campo deseado** usando `jq` (ua, ip, status, date, method)
 3. **Acumula los datos** en un archivo temporal único
 4. **Muestra el histograma** con `watch` actualizándose cada segundo
 5. **Limpia todo** cuando presionas Ctrl+C usando `trap`
@@ -133,6 +143,7 @@ Los scripts usan `mktemp` para crear archivos temporales únicos:
 - `/tmp/nginx_ips_XXXXXX.tmp`
 - `/tmp/nginx_status_XXXXXX.tmp`
 - `/tmp/nginx_date_XXXXXX.tmp`
+- `/tmp/nginx_method_XXXXXX.tmp`
 
 Donde `XXXXXX` es un string aleatorio. Estos archivos se eliminan automáticamente al salir.
 
@@ -156,7 +167,7 @@ Verifica la ruta de tu log de Nginx y modifica la variable `LOG_FILE` en el scri
 
 **El histograma no se actualiza**
 
-Verifica que tu log de Nginx esté en formato JSON y tenga los campos: `ua`, `ip`, `status`, `date`.
+Verifica que tu log de Nginx esté en formato JSON y tenga los campos: `ua`, `ip`, `status`, `date`, `method`.
 
 ## 🎨 Características
 
