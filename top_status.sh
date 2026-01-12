@@ -8,7 +8,7 @@
 #
 # Uso: top_status
 # Salir: Ctrl+C (limpia automáticamente)
-# Teclas: 1 = ejecutar 'date', 2 = ejecutar 'time'
+# Teclas: d=date, i=ip, m=method, s=status, a=agent, u=uri
 # =================================================
 
 set -euo pipefail
@@ -63,7 +63,7 @@ show_histogram() {
     output=$(printf '\033[H\033[J')  # Clear screen (ANSI escape)
     output+=$(echo -e "${GREEN}=== Top Status Codes en tiempo real ===${NC}")
     output+=$'\n'
-    output+=$(echo -e "${YELLOW}Teclas: [1] date  [2] time  [Ctrl+C] salir${NC}")
+    output+=$(echo -e "${YELLOW}Teclas: [d] date  [i] ip  [m] method  [s] status  [a] agent  [u] uri  [Ctrl+C] salir${NC}")
     output+=$'\n\n'
     output+="$histogram"
 
@@ -71,11 +71,11 @@ show_histogram() {
     printf '%s\n' "$output"
 }
 
-# Función para ejecutar comando externo y salir
-run_external_command() {
-    local cmd="$1"
+# Función para cambiar a otro script
+switch_to_script() {
+    local script="$1"
 
-    # Limpiar recursos antes de salir
+    # Limpiar recursos antes de cambiar
     if [[ -n "$TAIL_PID" ]] && kill -0 "$TAIL_PID" 2>/dev/null; then
         kill "$TAIL_PID" 2>/dev/null || true
     fi
@@ -84,10 +84,8 @@ run_external_command() {
     # Desactivar trap para evitar mensajes de limpieza
     trap - SIGINT SIGTERM EXIT
 
-    # Limpiar pantalla y ejecutar comando
-    clear
-    eval "$cmd"
-    exit 0
+    # Ejecutar el otro script
+    exec "$(dirname "$0")/$script"
 }
 
 # Configurar trap para capturar Ctrl+C y otras señales
@@ -117,12 +115,12 @@ while true; do
     # Leer tecla con timeout (permite refrescar automáticamente)
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
-            1)
-                run_external_command "date"
-                ;;
-            2)
-                run_external_command "time"
-                ;;
+            d) switch_to_script "top_date.sh" ;;
+            i) switch_to_script "top_ip.sh" ;;
+            m) switch_to_script "top_method.sh" ;;
+            s) ;; # Ya estamos en status
+            a) switch_to_script "top_ua.sh" ;;
+            u) switch_to_script "top_uri.sh" ;;
         esac
     fi
 done
