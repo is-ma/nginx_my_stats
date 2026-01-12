@@ -6,8 +6,13 @@
 # Muestra histogramas de diferentes campos del log
 # de Nginx con navegación por teclado
 #
-# Uso: panelt [modo]
-# Modos: date, ip, method, status, ua, uri (default: ip)
+# Uso:
+#   panelt                              # defaults: ip, now, sin filtro
+#   panelt modo periodo                 # sin filtro
+#   panelt modo periodo campo valor     # con filtro
+# Modos: date, ip, method, status, ua, uri
+# Periodos: now, hundred, thousand, complete
+# Filtro: campo y valor para filtrar (ej: status 404)
 # Salir: Ctrl+C
 # =================================================
 
@@ -23,6 +28,8 @@ TAIL_PID=""
 TEMP_FILE=""
 CURRENT_MODE=""
 CURRENT_PERIOD="now"
+FILTER_FIELD=""
+FILTER_VALUE=""
 
 # Configuración de modos: campo JSON y título
 declare -A MODE_FIELD=(
@@ -86,6 +93,7 @@ show_histogram() {
     local histogram
     local prop_line
     local period_line
+    local filter_line
 
     histogram=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N")
 
@@ -105,12 +113,21 @@ show_histogram() {
     period_line+="$(format_option t thousand "$CURRENT_PERIOD" thousand)  "
     period_line+="$(format_option c complete "$CURRENT_PERIOD" complete)"
 
+    # Construir línea de filtro
+    if [[ -n "$FILTER_FIELD" ]]; then
+        filter_line="Filtro: [F] SI ($FILTER_FIELD: $FILTER_VALUE)"
+    else
+        filter_line="Filtro: NO"
+    fi
+
     output=$(printf '\033[H\033[J')
     output+="=== ${MODE_TITLE[$CURRENT_MODE]} (${PERIOD_TITLE[$CURRENT_PERIOD]}) ==="
     output+=$'\n'
     output+="$prop_line"
     output+=$'\n'
     output+="$period_line"
+    output+=$'\n'
+    output+="$filter_line"
     output+=$'\n'
     output+="[Ctrl+C] salir"
     output+=$'\n\n'
@@ -119,10 +136,29 @@ show_histogram() {
     printf '%s\n' "$output"
 }
 
+# Construir expresión jq con filtro opcional
+build_jq_expr() {
+    local field="$1"
+    local filter_field="$2"
+    local filter_value="$3"
+
+    if [[ -n "$filter_field" ]]; then
+        # Usar contains para strings, == para números
+        if [[ "$filter_field" == "status" ]]; then
+            echo "select(.$filter_field == $filter_value) | $field"
+        else
+            echo "select(.$filter_field | tostring | contains(\"$filter_value\")) | $field"
+        fi
+    else
+        echo "$field"
+    fi
+}
+
 # Función para cargar datos según el periodo
 load_data() {
     local field="${MODE_FIELD[$CURRENT_MODE]}"
     local lines
+    local jq_expr
 
     case "$CURRENT_PERIOD" in
         hundred)  lines=100 ;;
@@ -134,19 +170,25 @@ load_data() {
     # Crear archivo temporal
     TEMP_FILE=$(mktemp /tmp/nginx_stats_XXXXXX.tmp)
 
+    jq_expr=$(build_jq_expr "$field" "$FILTER_FIELD" "$FILTER_VALUE")
+
     if [[ -n "$lines" ]]; then
-        sudo tail -n "$lines" "$LOG_FILE" | jq -r "$field" > "$TEMP_FILE"
+        sudo tail -n "$lines" "$LOG_FILE" | jq -r "$jq_expr" > "$TEMP_FILE"
     else
-        sudo jq -r "$field" "$LOG_FILE" > "$TEMP_FILE"
+        sudo jq -r "$jq_expr" "$LOG_FILE" > "$TEMP_FILE"
     fi
 }
 
 # Función para iniciar el tail con el campo actual (modo now)
 start_tail() {
     local field="${MODE_FIELD[$CURRENT_MODE]}"
+    local jq_expr
 
     TEMP_FILE=$(mktemp /tmp/nginx_stats_XXXXXX.tmp)
-    sudo tail -f "$LOG_FILE" | jq --unbuffered -r "$field" >> "$TEMP_FILE" &
+
+    jq_expr=$(build_jq_expr "$field" "$FILTER_FIELD" "$FILTER_VALUE")
+
+    sudo tail -f "$LOG_FILE" | jq --unbuffered -r "$jq_expr" >> "$TEMP_FILE" &
     TAIL_PID=$!
 }
 
@@ -162,35 +204,17 @@ stop_tail() {
     TEMP_FILE=""
 }
 
-# Función para cambiar de modo (propiedad)
-switch_mode() {
+# Función para relanzar con nuevos parámetros
+relaunch() {
     local new_mode="$1"
-
-    if [[ "$new_mode" == "$CURRENT_MODE" ]]; then
-        return
-    fi
+    local new_period="$2"
 
     stop_tail
-    CURRENT_MODE="$new_mode"
 
-    if [[ "$CURRENT_PERIOD" == "now" ]]; then
-        start_tail
+    if [[ -n "$FILTER_FIELD" ]]; then
+        exec "$0" "$new_mode" "$new_period" "$FILTER_FIELD" "$FILTER_VALUE"
     else
-        load_data
-    fi
-}
-
-# Función para cambiar de periodo (siempre recomputa)
-switch_period() {
-    local new_period="$1"
-
-    stop_tail
-    CURRENT_PERIOD="$new_period"
-
-    if [[ "$CURRENT_PERIOD" == "now" ]]; then
-        start_tail
-    else
-        load_data
+        exec "$0" "$new_mode" "$new_period"
     fi
 }
 
@@ -210,8 +234,24 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Determinar modo inicial (argumento o default)
-CURRENT_MODE="${1:-ip}"
+# Validar número de argumentos: 0, 2 o 4
+if [[ $# -ne 0 ]] && [[ $# -ne 2 ]] && [[ $# -ne 4 ]]; then
+    echo "Error: Número de argumentos inválido"
+    echo "Uso:"
+    echo "  panelt                              # defaults: ip, now"
+    echo "  panelt modo periodo                 # sin filtro"
+    echo "  panelt modo periodo campo valor     # con filtro"
+    exit 1
+fi
+
+# Asignar valores según número de argumentos
+if [[ $# -eq 0 ]]; then
+    CURRENT_MODE="ip"
+    CURRENT_PERIOD="now"
+else
+    CURRENT_MODE="$1"
+    CURRENT_PERIOD="$2"
+fi
 
 # Validar modo
 if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
@@ -220,8 +260,32 @@ if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
     exit 1
 fi
 
-# Iniciar en modo now
-start_tail
+# Validar periodo
+if [[ -z "${PERIOD_TITLE[$CURRENT_PERIOD]:-}" ]]; then
+    echo "Error: Periodo inválido: $CURRENT_PERIOD"
+    echo "Periodos válidos: now, hundred, thousand, complete"
+    exit 1
+fi
+
+# Parsear filtro (argumentos 3 y 4)
+if [[ $# -eq 4 ]]; then
+    FILTER_FIELD="$3"
+    FILTER_VALUE="$4"
+
+    # Validar campo de filtro
+    if [[ -z "${MODE_FIELD[$FILTER_FIELD]:-}" ]]; then
+        echo "Error: Campo de filtro inválido: $FILTER_FIELD"
+        echo "Campos válidos: date, ip, method, status, ua, uri"
+        exit 1
+    fi
+fi
+
+# Iniciar según el periodo
+if [[ "$CURRENT_PERIOD" == "now" ]]; then
+    start_tail
+else
+    load_data
+fi
 
 # Loop principal
 while true; do
@@ -230,17 +294,24 @@ while true; do
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
             # Propiedades
-            d) switch_mode "date" ;;
-            i) switch_mode "ip" ;;
-            m) switch_mode "method" ;;
-            s) switch_mode "status" ;;
-            a) switch_mode "ua" ;;
-            u) switch_mode "uri" ;;
+            d) relaunch "date" "$CURRENT_PERIOD" ;;
+            i) relaunch "ip" "$CURRENT_PERIOD" ;;
+            m) relaunch "method" "$CURRENT_PERIOD" ;;
+            s) relaunch "status" "$CURRENT_PERIOD" ;;
+            a) relaunch "ua" "$CURRENT_PERIOD" ;;
+            u) relaunch "uri" "$CURRENT_PERIOD" ;;
             # Periodos
-            n) switch_period "now" ;;
-            h) switch_period "hundred" ;;
-            t) switch_period "thousand" ;;
-            c) switch_period "complete" ;;
+            n) relaunch "$CURRENT_MODE" "now" ;;
+            h) relaunch "$CURRENT_MODE" "hundred" ;;
+            t) relaunch "$CURRENT_MODE" "thousand" ;;
+            c) relaunch "$CURRENT_MODE" "complete" ;;
+            # Filtro (solo quitar)
+            f)
+                if [[ -n "$FILTER_FIELD" ]]; then
+                    stop_tail
+                    exec "$0" "$CURRENT_MODE" "$CURRENT_PERIOD"
+                fi
+                ;;
         esac
     fi
 done
