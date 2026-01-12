@@ -63,18 +63,9 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Mensaje inicial
-echo -e "${GREEN}Iniciando monitor de User Agents...${NC}"
-echo -e "Log: ${YELLOW}$LOG_FILE${NC}"
-echo -e "Presiona ${RED}Ctrl+C${NC} para salir\n"
-sleep 1
-
 # Iniciar el tail en background y capturar su PID
 sudo tail -f "$LOG_FILE" | jq --unbuffered -r '.ua' >> "$TEMP_FILE" &
 TAIL_PID=$!
-
-# Esperar un momento para que se acumule algo de data
-sleep 0.5
 
 # Iniciar el watch con el histograma
 watch -n "$REFRESH_INTERVAL" "sort '$TEMP_FILE' | uniq -c | sort -nr | head -n $TOP_N"
