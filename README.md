@@ -111,7 +111,7 @@ TOP_N=30                                     # Cantidad de resultados a mostrar
 ### ¿Cómo funciona?
 
 1. **Inicia un `tail -f`** en background que lee el log continuamente
-2. **Extrae el campo deseado** usando `jq` (ua, remote_addr, status)
+2. **Extrae el campo deseado** usando `jq` (ua, ip, status)
 3. **Acumula los datos** en un archivo temporal único
 4. **Muestra el histograma** con `watch` actualizándose cada segundo
 5. **Limpia todo** cuando presionas Ctrl+C usando `trap`
@@ -145,7 +145,7 @@ Verifica la ruta de tu log de Nginx y modifica la variable `LOG_FILE` en el scri
 
 **El histograma no se actualiza**
 
-Verifica que tu log de Nginx esté en formato JSON y tenga los campos: `ua`, `remote_addr`, `status`.
+Verifica que tu log de Nginx esté en formato JSON y tenga los campos: `ua`, `ip`, `status`.
 
 ## 🎨 Características
 
