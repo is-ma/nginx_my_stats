@@ -30,6 +30,7 @@ CURRENT_MODE=""
 CURRENT_PERIOD="now"
 FILTER_FIELD=""
 FILTER_VALUE=""
+declare -a HISTOGRAM_VALUES=()  # Para selección por número
 
 # Configuración de modos: campo JSON y título
 declare -A MODE_FIELD=(
@@ -99,12 +100,34 @@ format_option() {
 # Función para mostrar el histograma (sin parpadeo)
 show_histogram() {
     local output
+    local histogram_raw
     local histogram
     local prop_line
     local period_line
     local filter_line
+    local line_num=0
 
-    histogram=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N")
+    histogram_raw=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N")
+
+    # Limpiar array y construir histograma con números
+    HISTOGRAM_VALUES=()
+    histogram=""
+    while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            # Extraer el valor (segunda columna en adelante)
+            local value
+            value=$(echo "$line" | awk '{$1=""; print $0}' | sed 's/^ *//')
+            HISTOGRAM_VALUES+=("$value")
+
+            # Agregar número solo a los primeros 10
+            if [[ $line_num -lt 10 ]]; then
+                histogram+="$line_num $line"$'\n'
+            else
+                histogram+="  $line"$'\n'
+            fi
+            ((line_num++))
+        fi
+    done <<< "$histogram_raw"
 
     # Construir línea de propiedades
     prop_line="Propiedad: "
@@ -140,11 +163,11 @@ show_histogram() {
     output+=$'\n'
     output+="[Ctrl+C] salir"
     output+=$'\n\n'
-    output+="     #  ${MODE_HEADER[$CURRENT_MODE]}"
+    output+="F      #  ${MODE_HEADER[$CURRENT_MODE]}"
     output+=$'\n'
     output+="$histogram"
 
-    printf '%s\n' "$output"
+    printf '%s' "$output"
 }
 
 # Construir expresión jq con filtro opcional
@@ -321,6 +344,13 @@ while true; do
                 if [[ -n "$FILTER_FIELD" ]]; then
                     stop_tail
                     exec "$0" "$CURRENT_MODE" "$CURRENT_PERIOD"
+                fi
+                ;;
+            # Selección por número (0-9) - aplica filtro
+            [0-9])
+                if [[ -n "${HISTOGRAM_VALUES[$key]:-}" ]]; then
+                    stop_tail
+                    exec "$0" "$CURRENT_MODE" "$CURRENT_PERIOD" "$CURRENT_MODE" "${HISTOGRAM_VALUES[$key]}"
                 fi
                 ;;
         esac
