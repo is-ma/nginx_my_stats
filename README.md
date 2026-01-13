@@ -50,8 +50,22 @@ sudo apt-get install jq
 Agrega esto a tu `~/.bashrc` para acceso rápido:
 
 ```bash
-# Nginx Stats Panel
-alias nginx_stats='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh'
+# Nginx Stats Tools
+alias stats='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh'
+# Atajo para filtrar por IP
+# ej. statspair ip 17.22.245.138
+# ej. statspair date "13/Jan/2026:00:28:08 -0600"
+# ej. statspair timestamp 1768285688.391
+# ej. statspair ip 82.25.215.238
+# ej. statspair method GET
+# ej. statspair uri "/4096083-guarderia-colinas"
+# ej. statspair status 200
+# ej. statspair bytes 6595
+# ej. statspair time 0.001
+# ej. statspair ua "Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
+# ej. statspair referer ""
+# ej. statspair host example.com
+alias statspair='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh ip thousand'
 ```
 
 Luego recarga tu configuración:
@@ -62,13 +76,25 @@ source ~/.bashrc
 ## 📖 Uso
 
 ```bash
-nginx_stats          # Inicia en modo IP (default)
-nginx_stats date     # Inicia en modo fecha
-nginx_stats status   # Inicia en modo status codes
-nginx_stats ua       # Inicia en modo User Agents
-nginx_stats uri      # Inicia en modo URIs
-nginx_stats method   # Inicia en modo métodos HTTP
+stats                # Inicia el panel interactivo
 ```
+
+Una vez dentro, navega con el teclado. Toda la operación se hace desde el panel.
+
+### Formato del Log JSON
+
+El script espera logs en formato JSON con estos campos:
+- `date` - Fecha: `"13/Jan/2026:00:28:08 -0600"`
+- `timestamp` - Unix timestamp: `1768285688.391`
+- `ip` - Dirección IP: `"82.25.215.238"`
+- `method` - Método HTTP: `"GET"`
+- `uri` - URI solicitada: `"/4096083-guarderia-colinas-de-san-gerardo"`
+- `status` - Código de respuesta: `200`
+- `bytes` - Bytes enviados: `6595`
+- `time` - Tiempo de respuesta: `0.001`
+- `ua` - User Agent: `"Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."`
+- `referer` - Referer: `""`
+- `host` - Host: `"rankeando.com"`
 
 ### Navegación
 Una vez dentro del panel, usa las teclas para cambiar de vista:
@@ -94,21 +120,15 @@ Presiona `Ctrl+C` para salir. El script automáticamente:
 
 ## 🎯 Ejemplo de Uso Real
 
-Después de implementar un nuevo `robots.txt`, puedes usar `nginx_stats` para verificar que los bots están respetando las reglas:
+1. Ejecuta `stats` para abrir el panel
+2. Presiona `a` para ver User Agents
+3. Presiona `c` para ver el log completo
+4. Identifica un bot sospechoso (ej: PetalBot en posición 0)
+5. Presiona `0` para filtrar por ese User Agent
+6. Presiona `i` para ver las IPs que usa ese bot
+7. Usa esa información para bloquear con `ufw deny from IP/CIDR`
 
-```bash
-$ nginx_stats ua
-
-=== Top User Agents en tiempo real ===
-Teclas: [d] date  [i] ip  [m] method  [s] status  [a] agent  [u] uri  [n] now  [h] hundred  [t] thousand  [c] complete  [f] quitar filtro  [0-9] seleccionar  [Ctrl+C] salir
-
-   208 Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...
-    82 Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot...
-    76 Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...
-    ...
-```
-
-Si un bot que bloqueaste sigue apareciendo, sabes que no está respetando el `robots.txt` y necesitas medidas más agresivas (como fail2ban).
+Si un bot que bloqueaste en `robots.txt` sigue apareciendo, sabes que no está respetando las reglas y necesitas medidas más agresivas (como fail2ban o bloqueo por IP).
 
 ## 🔧 Configuración
 
