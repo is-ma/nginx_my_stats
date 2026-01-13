@@ -107,7 +107,8 @@ show_histogram() {
     local filter_line
     local line_num=0
 
-    histogram_raw=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -nr | head -n "$TOP_N")
+    # sort -s para ordenamiento estable (mantiene orden original en empates)
+    histogram_raw=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -snr | head -n "$TOP_N")
 
     # Limpiar array y construir histograma con números
     HISTOGRAM_VALUES=()
