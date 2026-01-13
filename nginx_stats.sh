@@ -92,7 +92,7 @@ format_option() {
     local match="$4"
 
     if [[ "$current" == "$match" ]]; then
-        echo "[${key^^}] ${label^^}"
+        echo "[\033[93m$key\033[0m] \033[93m$label\033[0m"
     else
         echo "[$key] $label"
     fi
