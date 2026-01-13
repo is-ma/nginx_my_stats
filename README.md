@@ -16,6 +16,16 @@ Monitor interactivo que muestra histogramas en tiempo real de diferentes campos 
 - **[a] agent** - User Agents
 - **[u] uri** - URIs solicitadas
 
+**Periodos disponibles:**
+- **[n] now** - Tiempo real
+- **[h] hundred** - Últimos 100 registros
+- **[t] thousand** - Últimos 1000 registros
+- **[c] complete** - Log completo
+
+**Filtros dinámicos:**
+- **[0-9]** - Selecciona un valor del histograma para filtrar por él
+- **[f]** - Quita el filtro actual
+
 **Útil para:**
 - Identificar bots agresivos y crawlers no deseados
 - Detectar posibles ataques DDoS
@@ -68,6 +78,12 @@ Una vez dentro del panel, usa las teclas para cambiar de vista:
 - `s` - Ver status codes
 - `a` - Ver User Agents
 - `u` - Ver URIs
+- `n` - Cambiar a modo tiempo real
+- `h` - Cambiar a últimos 100 registros
+- `t` - Cambiar a últimos 1000 registros
+- `c` - Cambiar a log completo
+- `0-9` - Seleccionar un valor del histograma para filtrar
+- `f` - Quitar el filtro actual
 - `Ctrl+C` - Salir
 
 ### Salir
@@ -84,7 +100,7 @@ Después de implementar un nuevo `robots.txt`, puedes usar `panelt` para verific
 $ panelt ua
 
 === Top User Agents en tiempo real ===
-Teclas: [d] date  [i] ip  [m] method  [s] status  [a] agent  [u] uri  [Ctrl+C] salir
+Teclas: [d] date  [i] ip  [m] method  [s] status  [a] agent  [u] uri  [n] now  [h] hundred  [t] thousand  [c] complete  [f] quitar filtro  [0-9] seleccionar  [Ctrl+C] salir
 
    208 Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36...
     82 Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot...
