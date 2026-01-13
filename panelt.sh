@@ -31,6 +31,7 @@ CURRENT_PERIOD="now"
 FILTER_FIELD=""
 FILTER_VALUE=""
 declare -a HISTOGRAM_VALUES=()  # Para selección por número
+CACHED_HISTOGRAM=""  # Cache para modos estáticos (hundred, thousand, complete)
 
 # Configuración de modos: campo JSON y título
 declare -A MODE_FIELD=(
@@ -97,38 +98,42 @@ format_option() {
     fi
 }
 
-# Función para mostrar el histograma (sin parpadeo)
-show_histogram() {
-    local output
+# Función para calcular el histograma desde TEMP_FILE
+compute_histogram() {
     local histogram_raw
-    local histogram
-    local prop_line
-    local period_line
-    local filter_line
     local line_num=0
 
-    # sort -s para ordenamiento estable (mantiene orden original en empates)
     histogram_raw=$(sort "$TEMP_FILE" 2>/dev/null | uniq -c | sort -snr | head -n "$TOP_N")
 
-    # Limpiar array y construir histograma con números
     HISTOGRAM_VALUES=()
-    histogram=""
+    CACHED_HISTOGRAM=""
     while IFS= read -r line; do
         if [[ -n "$line" ]]; then
-            # Extraer el valor (segunda columna en adelante)
             local value
             value=$(echo "$line" | awk '{$1=""; print $0}' | sed 's/^ *//')
             HISTOGRAM_VALUES+=("$value")
 
-            # Agregar número solo a los primeros 10
             if [[ $line_num -lt 10 ]]; then
-                histogram+="$line_num $line"$'\n'
+                CACHED_HISTOGRAM+="$line_num $line"$'\n'
             else
-                histogram+="  $line"$'\n'
+                CACHED_HISTOGRAM+="  $line"$'\n'
             fi
             ((line_num++))
         fi
     done <<< "$histogram_raw"
+}
+
+# Función para mostrar el histograma (sin parpadeo)
+show_histogram() {
+    local output
+    local prop_line
+    local period_line
+    local filter_line
+
+    # En modo now, recalcular cada vez; en otros modos, usar cache
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        compute_histogram
+    fi
 
     # Construir línea de propiedades
     prop_line="Propiedad: "
@@ -166,7 +171,7 @@ show_histogram() {
     output+=$'\n\n'
     output+="F      #  ${MODE_HEADER[$CURRENT_MODE]}"
     output+=$'\n'
-    output+="$histogram"
+    output+="$CACHED_HISTOGRAM"
 
     printf '%s' "$output"
 }
@@ -212,6 +217,9 @@ load_data() {
     else
         sudo jq -r "$jq_expr" "$LOG_FILE" > "$TEMP_FILE"
     fi
+
+    # Calcular histograma una sola vez para modos estáticos
+    compute_histogram
 }
 
 # Función para iniciar el tail con el campo actual (modo now)
