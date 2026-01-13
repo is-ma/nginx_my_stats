@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # =================================================
-# panelt - Panel de estadísticas Nginx
+# nginx_stats - Panel de estadísticas Nginx
 # =================================================
 # Muestra histogramas de diferentes campos del log
 # de Nginx con navegación por teclado
 #
 # Uso:
-#   panelt                              # defaults: ip, now, sin filtro
-#   panelt modo periodo                 # sin filtro
-#   panelt modo periodo campo valor     # con filtro
+#   nginx_stats                              # defaults: ip, now, sin filtro
+#   nginx_stats modo periodo                 # sin filtro
+#   nginx_stats modo periodo campo valor     # con filtro
 # Modos: date, ip, method, status, ua, uri
 # Periodos: now, hundred, thousand, complete
 # Filtro: campo y valor para filtrar (ej: status 404)
@@ -281,9 +281,9 @@ fi
 if [[ $# -ne 0 ]] && [[ $# -ne 2 ]] && [[ $# -ne 4 ]]; then
     echo "Error: Número de argumentos inválido"
     echo "Uso:"
-    echo "  panelt                              # defaults: ip, now"
-    echo "  panelt modo periodo                 # sin filtro"
-    echo "  panelt modo periodo campo valor     # con filtro"
+    echo "  nginx_stats                              # defaults: ip, now"
+    echo "  nginx_stats modo periodo                 # sin filtro"
+    echo "  nginx_stats modo periodo campo valor     # con filtro"
     exit 1
 fi
 

@@ -4,7 +4,7 @@ Suite de herramientas para monitorear en tiempo real las estadísticas del servi
 
 ## 📊 Herramienta
 
-### `panelt.sh` - Panel de Estadísticas
+### `nginx_stats.sh` - Panel de Estadísticas
 
 Monitor interactivo que muestra histogramas en tiempo real de diferentes campos del log de Nginx. Permite navegar entre vistas usando el teclado.
 
@@ -51,7 +51,7 @@ Agrega esto a tu `~/.bashrc` para acceso rápido:
 
 ```bash
 # Nginx Stats Panel
-alias panelt='/home/deploy/.is-ma/nginx_my_stats/panelt.sh'
+alias nginx_stats='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh'
 ```
 
 Luego recarga tu configuración:
@@ -62,12 +62,12 @@ source ~/.bashrc
 ## 📖 Uso
 
 ```bash
-panelt          # Inicia en modo IP (default)
-panelt date     # Inicia en modo fecha
-panelt status   # Inicia en modo status codes
-panelt ua       # Inicia en modo User Agents
-panelt uri      # Inicia en modo URIs
-panelt method   # Inicia en modo métodos HTTP
+nginx_stats          # Inicia en modo IP (default)
+nginx_stats date     # Inicia en modo fecha
+nginx_stats status   # Inicia en modo status codes
+nginx_stats ua       # Inicia en modo User Agents
+nginx_stats uri      # Inicia en modo URIs
+nginx_stats method   # Inicia en modo métodos HTTP
 ```
 
 ### Navegación
@@ -94,10 +94,10 @@ Presiona `Ctrl+C` para salir. El script automáticamente:
 
 ## 🎯 Ejemplo de Uso Real
 
-Después de implementar un nuevo `robots.txt`, puedes usar `panelt` para verificar que los bots están respetando las reglas:
+Después de implementar un nuevo `robots.txt`, puedes usar `nginx_stats` para verificar que los bots están respetando las reglas:
 
 ```bash
-$ panelt ua
+$ nginx_stats ua
 
 === Top User Agents en tiempo real ===
 Teclas: [d] date  [i] ip  [m] method  [s] status  [a] agent  [u] uri  [n] now  [h] hundred  [t] thousand  [c] complete  [f] quitar filtro  [0-9] seleccionar  [Ctrl+C] salir
