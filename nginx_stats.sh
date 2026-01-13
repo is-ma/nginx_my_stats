@@ -90,11 +90,13 @@ format_option() {
     local label="$2"
     local current="$3"
     local match="$4"
+    local yellow_start=$'\e[93m'
+    local reset=$'\e[0m'
 
     if [[ "$current" == "$match" ]]; then
-        echo "[\033[93m$key\033[0m] \033[93m$label\033[0m"
+        printf "[%s%s%s] %s%s%s" "$yellow_start" "$key" "$reset" "$yellow_start" "$label" "$reset"
     else
-        echo "[$key] $label"
+        printf "[%s] %s" "$key" "$label"
     fi
 }
 
@@ -137,27 +139,27 @@ show_histogram() {
 
     # Construir línea de propiedades
     prop_line="Propiedad: "
-    prop_line+=$(format_option d date "$CURRENT_MODE" date)
+    prop_line+="$(format_option d date "$CURRENT_MODE" date)"
     prop_line+="  "
-    prop_line+=$(format_option i ip "$CURRENT_MODE" ip)
+    prop_line+="$(format_option i ip "$CURRENT_MODE" ip)"
     prop_line+="  "
-    prop_line+=$(format_option m method "$CURRENT_MODE" method)
+    prop_line+="$(format_option m method "$CURRENT_MODE" method)"
     prop_line+="  "
-    prop_line+=$(format_option s status "$CURRENT_MODE" status)
+    prop_line+="$(format_option s status "$CURRENT_MODE" status)"
     prop_line+="  "
-    prop_line+=$(format_option a agent "$CURRENT_MODE" ua)
+    prop_line+="$(format_option a agent "$CURRENT_MODE" ua)"
     prop_line+="  "
-    prop_line+=$(format_option u uri "$CURRENT_MODE" uri)
+    prop_line+="$(format_option u uri "$CURRENT_MODE" uri)"
 
     # Construir línea de periodos
     period_line="Periodo: "
-    period_line+=$(format_option n now "$CURRENT_PERIOD" now)
+    period_line+="$(format_option n now "$CURRENT_PERIOD" now)"
     period_line+="  "
-    period_line+=$(format_option h hundred "$CURRENT_PERIOD" hundred)
+    period_line+="$(format_option h hundred "$CURRENT_PERIOD" hundred)"
     period_line+="  "
-    period_line+=$(format_option t thousand "$CURRENT_PERIOD" thousand)
+    period_line+="$(format_option t thousand "$CURRENT_PERIOD" thousand)"
     period_line+="  "
-    period_line+=$(format_option c complete "$CURRENT_PERIOD" complete)
+    period_line+="$(format_option c complete "$CURRENT_PERIOD" complete)"
 
     # Construir línea de filtro
     if [[ -n "$FILTER_FIELD" ]]; then
