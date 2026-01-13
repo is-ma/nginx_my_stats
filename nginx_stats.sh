@@ -20,7 +20,7 @@ set -uo pipefail
 
 # Configuración
 LOG_FILE="/var/log/nginx/shield_access.log"
-REFRESH_INTERVAL=1
+REFRESH_INTERVAL=2
 TOP_N=30
 
 # Variables de estado
