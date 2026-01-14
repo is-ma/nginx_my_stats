@@ -106,11 +106,13 @@ format_filter_line() {
     local reset=$'\e[0m'
     
     if [[ -n "$FILTER_FIELD" ]]; then
-        printf "Filtro: [%sf%s] si (%s%s%s: %s%s%s)" \
+        # Con filtro: [f] en amarillo, "sí" en minúsculas, y el filtro en amarillo
+        printf "Filtro: [%sf%s] sí (%s%s%s: %s%s%s)" \
             "$yellow_start" "$reset" \
             "$yellow_start" "$FILTER_FIELD" "$reset" \
             "$yellow_start" "$FILTER_VALUE" "$reset"
     else
+        # Sin filtro: [f] en amarillo, "no" en minúsculas
         printf "Filtro: [%sf%s] no" "$yellow_start" "$reset"
     fi
 }
