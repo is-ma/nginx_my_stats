@@ -112,8 +112,8 @@ format_filter_line() {
             "$yellow_start" "$FILTER_FIELD" "$reset" \
             "$yellow_start" "$FILTER_VALUE" "$reset"
     else
-        # Sin filtro: [f] en amarillo, "no" en minúsculas
-        printf "Filtro: [%sf%s] no" "$yellow_start" "$reset"
+        # Sin filtro: solo "no" en minúsculas, sin 'f'
+        printf "Filtro: no"
     fi
 }
 
