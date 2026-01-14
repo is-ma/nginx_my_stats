@@ -100,6 +100,21 @@ format_option() {
     fi
 }
 
+# Función para formatear línea de filtro
+format_filter_line() {
+    local yellow_start=$'\e[93m'
+    local reset=$'\e[0m'
+    
+    if [[ -n "$FILTER_FIELD" ]]; then
+        printf "Filtro: [%sf%s] si (%s%s%s: %s%s%s)" \
+            "$yellow_start" "$reset" \
+            "$yellow_start" "$FILTER_FIELD" "$reset" \
+            "$yellow_start" "$FILTER_VALUE" "$reset"
+    else
+        printf "Filtro: [%sf%s] no" "$yellow_start" "$reset"
+    fi
+}
+
 # Función para calcular el histograma desde TEMP_FILE
 compute_histogram() {
     local histogram_raw
@@ -161,15 +176,8 @@ show_histogram() {
     period_line+="  "
     period_line+="$(format_option c complete "$CURRENT_PERIOD" complete)"
 
-    # Construir línea de filtro
-    if [[ -n "$FILTER_FIELD" ]]; then
-        filter_line="Filtro: [F] SI ($FILTER_FIELD: $FILTER_VALUE)"
-        if [[ -z "$FILTER_FIELD" ]]; then
-            filter_line="Filtro: NO"
-        fi
-    else
-        filter_line="Filtro: NO"
-    fi
+    # Construir línea de filtro usando la nueva función
+    filter_line=$(format_filter_line)
 
     output=$(printf '\033[H\033[J')
     output+="=== ${MODE_TITLE[$CURRENT_MODE]} (${PERIOD_TITLE[$CURRENT_PERIOD]}) ==="
