@@ -23,6 +23,11 @@ LOG_FILE="/var/log/nginx/shield_access.log"
 REFRESH_INTERVAL=2
 TOP_N=30
 
+# Colores y secuencias de escape
+YELLOW='\033[1;33m'
+NC='\033[0m'
+CLEAR_SCREEN='\033[H\033[J'
+
 # Variables de estado
 TAIL_PID=""
 TEMP_FILE=""
@@ -90,11 +95,9 @@ format_option() {
     local label="$2"
     local current="$3"
     local match="$4"
-    local yellow_start=$'\e[93m'
-    local reset=$'\e[0m'
 
     if [[ "$current" == "$match" ]]; then
-        printf "[%s%s%s] %s%s%s" "$yellow_start" "$key" "$reset" "$yellow_start" "$label" "$reset"
+        printf "[${YELLOW}%s${NC}] ${YELLOW}%s${NC}" "$key" "$label"
     else
         printf "[%s] %s" "$key" "$label"
     fi
@@ -102,15 +105,10 @@ format_option() {
 
 # Función para formatear línea de filtro
 format_filter_line() {
-    local yellow_start=$'\e[93m'
-    local reset=$'\e[0m'
-    
     if [[ -n "$FILTER_FIELD" ]]; then
         # Con filtro: [f] en amarillo, "sí" en minúsculas, y el filtro en amarillo
-        printf "Filtro: [%sf%s] sí (%s%s%s: %s%s%s)" \
-            "$yellow_start" "$reset" \
-            "$yellow_start" "$FILTER_FIELD" "$reset" \
-            "$yellow_start" "$FILTER_VALUE" "$reset"
+        printf "Filtro: [${YELLOW}f${NC}] sí (${YELLOW}%s${NC}: ${YELLOW}%s${NC})" \
+            "$FILTER_FIELD" "$FILTER_VALUE"
     else
         # Sin filtro: solo "no" en minúsculas, sin 'f'
         printf "Filtro: no"
@@ -181,7 +179,7 @@ show_histogram() {
     # Construir línea de filtro usando la nueva función
     filter_line=$(format_filter_line)
 
-    output=$(printf '\033[H\033[J')
+    output=$(printf "${CLEAR_SCREEN}")
     output+="=== ${MODE_TITLE[$CURRENT_MODE]} (${PERIOD_TITLE[$CURRENT_PERIOD]}) ==="
     output+=$'\n'
     output+="$prop_line"
