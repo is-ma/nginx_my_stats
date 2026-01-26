@@ -7,9 +7,9 @@
 # de Nginx con navegación por teclado
 #
 # Uso:
-#   nginx_stats                              # defaults: ip, now, sin filtro
-#   nginx_stats modo periodo                 # sin filtro
-#   nginx_stats modo periodo campo valor     # con filtro
+#   nginx_stats [--access-log ARCHIVO]                              # defaults: ip, now, sin filtro
+#   nginx_stats [--access-log ARCHIVO] modo periodo                 # sin filtro
+#   nginx_stats [--access-log ARCHIVO] modo periodo campo valor     # con filtro
 # Modos: date, ip, method, status, ua, uri
 # Periodos: now, hundred, thousand, complete
 # Filtro: campo y valor para filtrar (ej: status 404)
@@ -277,11 +277,19 @@ relaunch() {
 
     stop_tail
 
-    if [[ -n "$FILTER_FIELD" ]]; then
-        exec "$0" "$new_mode" "$new_period" "$FILTER_FIELD" "$FILTER_VALUE"
-    else
-        exec "$0" "$new_mode" "$new_period"
+    # Construir comando con --access-log si no es el valor por defecto
+    local cmd_args=()
+    if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
+        cmd_args=(--access-log "$LOG_FILE")
     fi
+    
+    cmd_args+=("$new_mode" "$new_period")
+    
+    if [[ -n "$FILTER_FIELD" ]]; then
+        cmd_args+=("$FILTER_FIELD" "$FILTER_VALUE")
+    fi
+
+    exec "$0" "${cmd_args[@]}"
 }
 
 # Configurar trap
@@ -300,17 +308,36 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Validar número de argumentos: 0, 2 o 4
+# Procesar opciones con nombre (--access-log)
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --access-log)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --access-log requiere un archivo"
+                exit 1
+            fi
+            LOG_FILE="$2"
+            shift 2
+            ;;
+        *)
+            # Si no es una opción con nombre, salir del bucle
+            break
+            ;;
+    esac
+done
+
+# Ahora, $@ contiene solo los argumentos posicionales restantes
+# Validar número de argumentos posicionales: 0, 2 o 4
 if [[ $# -ne 0 ]] && [[ $# -ne 2 ]] && [[ $# -ne 4 ]]; then
     echo "Error: Número de argumentos inválido"
     echo "Uso:"
-    echo "  nginx_stats                              # defaults: ip, now"
-    echo "  nginx_stats modo periodo                 # sin filtro"
-    echo "  nginx_stats modo periodo campo valor     # con filtro"
+    echo "  nginx_stats [--access-log ARCHIVO]                              # defaults: ip, now"
+    echo "  nginx_stats [--access-log ARCHIVO] modo periodo                 # sin filtro"
+    echo "  nginx_stats [--access-log ARCHIVO] modo periodo campo valor     # con filtro"
     exit 1
 fi
 
-# Asignar valores según número de argumentos
+# Asignar valores según número de argumentos posicionales restantes
 if [[ $# -eq 0 ]]; then
     CURRENT_MODE="ip"
     CURRENT_PERIOD="now"
@@ -333,7 +360,7 @@ if [[ -z "${PERIOD_TITLE[$CURRENT_PERIOD]:-}" ]]; then
     exit 1
 fi
 
-# Parsear filtro (argumentos 3 y 4)
+# Parsear filtro (argumentos posicionales 3 y 4)
 if [[ $# -eq 4 ]]; then
     FILTER_FIELD="$3"
     FILTER_VALUE="$4"
