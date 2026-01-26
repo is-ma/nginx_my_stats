@@ -11,7 +11,7 @@
 #   Modos: date, ip, method, status, ua, uri (default: ip)
 #   Periodos: now, hundred, thousand, complete (default: now)
 #   Filtro: campo y valor para filtrar (ej: --filter-field status --filter-value 404)
-#   Salir: q o Ctrl+C
+#   Salir: q
 # =================================================
 
 set -uo pipefail
@@ -188,7 +188,7 @@ show_histogram() {
     output+=$'\n'
     output+="$filter_line"
     output+=$'\n'
-    output+="[q/Ctrl+C] salir"
+    output+="[q] Salir"
     output+=$'\n\n'
     output+="F      #  ${MODE_HEADER[$CURRENT_MODE]}"
     output+=$'\n'
