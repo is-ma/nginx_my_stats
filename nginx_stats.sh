@@ -7,13 +7,11 @@
 # de Nginx con navegación por teclado
 #
 # Uso:
-#   nginx_stats [--access-log ARCHIVO]                              # defaults: ip, now, sin filtro
-#   nginx_stats [--access-log ARCHIVO] modo periodo                 # sin filtro
-#   nginx_stats [--access-log ARCHIVO] modo periodo campo valor     # con filtro
-# Modos: date, ip, method, status, ua, uri
-# Periodos: now, hundred, thousand, complete
-# Filtro: campo y valor para filtrar (ej: status 404)
-# Salir: Ctrl+C
+#   nginx_stats [--access-log ARCHIVO] [--mode MODO] [--period PERIODO] [--filter-field CAMPO] [--filter-value VALOR]
+#   Modos: date, ip, method, status, ua, uri (default: ip)
+#   Periodos: now, hundred, thousand, complete (default: now)
+#   Filtro: campo y valor para filtrar (ej: --filter-field status --filter-value 404)
+#   Salir: Ctrl+C
 # =================================================
 
 set -uo pipefail
@@ -277,16 +275,23 @@ relaunch() {
 
     stop_tail
 
-    # Construir comando con --access-log si no es el valor por defecto
+    # Construir comando con todas las opciones
     local cmd_args=()
+    
+    # Agregar --access-log si no es el valor por defecto
     if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
-        cmd_args=(--access-log "$LOG_FILE")
+        cmd_args+=(--access-log "$LOG_FILE")
     fi
     
-    cmd_args+=("$new_mode" "$new_period")
+    # Agregar --mode
+    cmd_args+=(--mode "$new_mode")
     
+    # Agregar --period
+    cmd_args+=(--period "$new_period")
+    
+    # Agregar filtro si está presente
     if [[ -n "$FILTER_FIELD" ]]; then
-        cmd_args+=("$FILTER_FIELD" "$FILTER_VALUE")
+        cmd_args+=(--filter-field "$FILTER_FIELD" --filter-value "$FILTER_VALUE")
     fi
 
     exec "$0" "${cmd_args[@]}"
@@ -308,7 +313,7 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Procesar opciones con nombre (--access-log)
+# Procesar todas las opciones con nombre
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --access-log)
@@ -319,32 +324,52 @@ while [[ $# -gt 0 ]]; do
             LOG_FILE="$2"
             shift 2
             ;;
+        --mode)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --mode requiere un valor"
+                exit 1
+            fi
+            CURRENT_MODE="$2"
+            shift 2
+            ;;
+        --period)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --period requiere un valor"
+                exit 1
+            fi
+            CURRENT_PERIOD="$2"
+            shift 2
+            ;;
+        --filter-field)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --filter-field requiere un valor"
+                exit 1
+            fi
+            FILTER_FIELD="$2"
+            shift 2
+            ;;
+        --filter-value)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --filter-value requiere un valor"
+                exit 1
+            fi
+            FILTER_VALUE="$2"
+            shift 2
+            ;;
         *)
-            # Si no es una opción con nombre, salir del bucle
-            break
+            echo "Error: Opción desconocida: $1"
+            echo "Uso:"
+            echo "  nginx_stats [--access-log ARCHIVO] [--mode MODO] [--period PERIODO] [--filter-field CAMPO] [--filter-value VALOR]"
+            echo "  Modos: date, ip, method, status, ua, uri"
+            echo "  Periodos: now, hundred, thousand, complete"
+            exit 1
             ;;
     esac
 done
 
-# Ahora, $@ contiene solo los argumentos posicionales restantes
-# Validar número de argumentos posicionales: 0, 2 o 4
-if [[ $# -ne 0 ]] && [[ $# -ne 2 ]] && [[ $# -ne 4 ]]; then
-    echo "Error: Número de argumentos inválido"
-    echo "Uso:"
-    echo "  nginx_stats [--access-log ARCHIVO]                              # defaults: ip, now"
-    echo "  nginx_stats [--access-log ARCHIVO] modo periodo                 # sin filtro"
-    echo "  nginx_stats [--access-log ARCHIVO] modo periodo campo valor     # con filtro"
-    exit 1
-fi
-
-# Asignar valores según número de argumentos posicionales restantes
-if [[ $# -eq 0 ]]; then
-    CURRENT_MODE="ip"
-    CURRENT_PERIOD="now"
-else
-    CURRENT_MODE="$1"
-    CURRENT_PERIOD="$2"
-fi
+# Establecer valores por defecto si no se proporcionaron
+: "${CURRENT_MODE:=ip}"
+: "${CURRENT_PERIOD:=now}"
 
 # Validar modo
 if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
@@ -360,12 +385,18 @@ if [[ -z "${PERIOD_TITLE[$CURRENT_PERIOD]:-}" ]]; then
     exit 1
 fi
 
-# Parsear filtro (argumentos posicionales 3 y 4)
-if [[ $# -eq 4 ]]; then
-    FILTER_FIELD="$3"
-    FILTER_VALUE="$4"
+# Validar que si se proporciona --filter-value, también se proporcione --filter-field y viceversa
+if [[ -n "$FILTER_FIELD" && -z "$FILTER_VALUE" ]]; then
+    echo "Error: --filter-field requiere --filter-value"
+    exit 1
+fi
+if [[ -n "$FILTER_VALUE" && -z "$FILTER_FIELD" ]]; then
+    echo "Error: --filter-value requiere --filter-field"
+    exit 1
+fi
 
-    # Validar campo de filtro
+# Validar campo de filtro si se proporciona
+if [[ -n "$FILTER_FIELD" ]]; then
     if [[ -z "${MODE_FIELD[$FILTER_FIELD]:-}" ]]; then
         echo "Error: Campo de filtro inválido: $FILTER_FIELD"
         echo "Campos válidos: date, ip, method, status, ua, uri"
@@ -402,14 +433,26 @@ while true; do
             f)
                 if [[ -n "$FILTER_FIELD" ]]; then
                     stop_tail
-                    exec "$0" "$CURRENT_MODE" "$CURRENT_PERIOD"
+                    # Reconstruir comando sin filtro
+                    local cmd_args=()
+                    if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
+                        cmd_args+=(--access-log "$LOG_FILE")
+                    fi
+                    cmd_args+=(--mode "$CURRENT_MODE" --period "$CURRENT_PERIOD")
+                    exec "$0" "${cmd_args[@]}"
                 fi
                 ;;
             # Selección por número (0-9) - aplica filtro
             [0-9])
                 if [[ -n "${HISTOGRAM_VALUES[$key]:-}" ]]; then
                     stop_tail
-                    exec "$0" "$CURRENT_MODE" "$CURRENT_PERIOD" "$CURRENT_MODE" "${HISTOGRAM_VALUES[$key]}"
+                    # Reconstruir comando con filtro
+                    local cmd_args=()
+                    if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
+                        cmd_args+=(--access-log "$LOG_FILE")
+                    fi
+                    cmd_args+=(--mode "$CURRENT_MODE" --period "$CURRENT_PERIOD" --filter-field "$CURRENT_MODE" --filter-value "${HISTOGRAM_VALUES[$key]}")
+                    exec "$0" "${cmd_args[@]}"
                 fi
                 ;;
         esac
