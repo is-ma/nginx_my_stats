@@ -167,8 +167,8 @@ show_histogram() {
     prop_line+="  "
     prop_line+="$(format_option u uri "$CURRENT_MODE" uri)"
 
-    # Construir línea de periodos
-    period_line="Periodo: "
+    # Construir línea de CUANTOS
+    period_line="CUANTOS: "
     period_line+="$(format_option n now "$CURRENT_PERIOD" now)"
     period_line+="  "
     period_line+="$(format_option h hundred "$CURRENT_PERIOD" hundred)"
@@ -386,10 +386,10 @@ if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
     exit 1
 fi
 
-# Validar periodo
+# Validar CUANTOS
 if [[ -z "${PERIOD_TITLE[$CURRENT_PERIOD]:-}" ]]; then
-    echo "Error: Periodo inválido: $CURRENT_PERIOD"
-    echo "Periodos válidos: now, hundred, thousand, complete"
+    echo "Error: CUANTOS inválido: $CURRENT_PERIOD"
+    echo "CUANTOS válidos: now, hundred, thousand, complete"
     exit 1
 fi
 
