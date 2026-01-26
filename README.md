@@ -51,21 +51,10 @@ Agrega esto a tu `~/.bashrc` para acceso rápido:
 
 ```bash
 # Nginx Stats Tools
-alias stats='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh'
+alias s='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh'
 # Atajo para filtrar por IP
 # ej. statspair ip 17.22.245.138
-# ej. statspair date "13/Jan/2026:00:28:08 -0600"
-# ej. statspair timestamp 1768285688.391
-# ej. statspair ip 82.25.215.238
-# ej. statspair method GET
-# ej. statspair uri "/4096083-guarderia-colinas"
-# ej. statspair status 200
-# ej. statspair bytes 6595
-# ej. statspair time 0.001
-# ej. statspair ua "Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."
-# ej. statspair referer ""
-# ej. statspair host example.com
-alias statspair='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh ip thousand'
+alias s='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh ip thousand'
 ```
 
 Luego recarga tu configuración:
