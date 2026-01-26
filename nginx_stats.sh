@@ -188,7 +188,10 @@ show_histogram() {
     output+=$'\n'
     output+="$filter_line"
     output+=$'\n'
-    output+="Salir: [q]"
+    # Definir colores
+    local yellow_start=$'\e[93m'
+    local reset=$'\e[0m'
+    output+="Salir: [${yellow_start}q${reset}]"
     output+=$'\n\n'
     output+="F      #  ${MODE_HEADER[$CURRENT_MODE]}"
     output+=$'\n'
