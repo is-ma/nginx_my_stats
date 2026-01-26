@@ -39,6 +39,7 @@ declare -A MODE_FIELD=(
     [status]=".status"
     [ua]=".ua"
     [uri]=".uri"
+    [cache]=".cache"
 )
 
 declare -A MODE_TITLE=(
@@ -48,6 +49,7 @@ declare -A MODE_TITLE=(
     [status]="Top Status Codes"
     [ua]="Top User Agents"
     [uri]="Top URIs"
+    [cache]="Top Cache Status"
 )
 
 declare -A PERIOD_TITLE=(
@@ -61,6 +63,10 @@ declare -A MODE_HEADER=(
     [date]="Fecha"
     [ip]="IP"
     [method]="Método"
+    [status]="Status"
+    [ua]="User Agent"
+    [uri]="URI"
+    [cache]="Cache"
     [status]="Status"
     [ua]="User Agent"
     [uri]="URI"
