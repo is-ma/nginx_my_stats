@@ -236,7 +236,12 @@ load_data() {
         *)        return ;; # now no usa esta función
     esac
 
-    # Crear archivo temporal
+    # Limpiar archivo temporal existente
+    if [[ -n "$TEMP_FILE" ]] && [[ -f "$TEMP_FILE" ]]; then
+        rm -f "$TEMP_FILE"
+    fi
+    
+    # Crear nuevo archivo temporal
     TEMP_FILE=$(mktemp /tmp/nginx_stats_XXXXXX.tmp)
 
     jq_expr=$(build_jq_expr "$field" "$FILTER_FIELD" "$FILTER_VALUE")
@@ -256,6 +261,12 @@ start_tail() {
     local field="${MODE_FIELD[$CURRENT_MODE]}"
     local jq_expr
 
+    # Limpiar archivo temporal existente
+    if [[ -n "$TEMP_FILE" ]] && [[ -f "$TEMP_FILE" ]]; then
+        rm -f "$TEMP_FILE"
+    fi
+    
+    # Crear nuevo archivo temporal
     TEMP_FILE=$(mktemp /tmp/nginx_stats_XXXXXX.tmp)
 
     jq_expr=$(build_jq_expr "$field" "$FILTER_FIELD" "$FILTER_VALUE")
@@ -276,33 +287,85 @@ stop_tail() {
     TEMP_FILE=""
 }
 
-# Función para relanzar con nuevos parámetros
-relaunch() {
+# Función para cambiar modo en caliente
+change_mode() {
     local new_mode="$1"
-    local new_period="$2"
+    
+    # Validar modo
+    if [[ -z "${MODE_FIELD[$new_mode]:-}" ]]; then
+        return 1
+    fi
+    
+    CURRENT_MODE="$new_mode"
+    
+    # Si estamos en modo now, reiniciar tail con el nuevo campo
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        stop_tail
+        start_tail
+    else
+        # Para modos estáticos, recargar datos
+        load_data
+    fi
+}
 
+# Función para cambiar CUANTOS en caliente
+change_period() {
+    local new_period="$1"
+    
+    # Validar periodo
+    if [[ -z "${PERIOD_TITLE[$new_period]:-}" ]]; then
+        return 1
+    fi
+    
+    CURRENT_PERIOD="$new_period"
+    
+    # Detener tail si existe
     stop_tail
-
-    # Construir comando con todas las opciones
-    local cmd_args=()
     
-    # Agregar --access-log si no es el valor por defecto
-    if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
-        cmd_args+=(--access-log "$LOG_FILE")
+    # Iniciar según el nuevo periodo
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        start_tail
+    else
+        load_data
+    fi
+}
+
+# Función para aplicar filtro en caliente
+apply_filter() {
+    local field="$1"
+    local value="$2"
+    
+    # Validar campo
+    if [[ -z "${MODE_FIELD[$field]:-}" ]]; then
+        return 1
     fi
     
-    # Agregar --mode
-    cmd_args+=(--mode "$new_mode")
+    FILTER_FIELD="$field"
+    FILTER_VALUE="$value"
     
-    # Agregar --how-many
-    cmd_args+=(--how-many "$new_period")
-    
-    # Agregar filtro si está presente
+    # Reconfigurar según el periodo actual
+    stop_tail
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        start_tail
+    else
+        load_data
+    fi
+}
+
+# Función para quitar filtro en caliente
+remove_filter() {
     if [[ -n "$FILTER_FIELD" ]]; then
-        cmd_args+=(--filter-field "$FILTER_FIELD" --filter-value "$FILTER_VALUE")
+        FILTER_FIELD=""
+        FILTER_VALUE=""
+        
+        # Reconfigurar según el periodo actual
+        stop_tail
+        if [[ "$CURRENT_PERIOD" == "now" ]]; then
+            start_tail
+        else
+            load_data
+        fi
     fi
-
-    exec "$0" "${cmd_args[@]}"
 }
 
 # Configurar trap
@@ -426,41 +489,25 @@ while true; do
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
             # Propiedades
-            d) relaunch "date" "$CURRENT_PERIOD" ;;
-            i) relaunch "ip" "$CURRENT_PERIOD" ;;
-            m) relaunch "method" "$CURRENT_PERIOD" ;;
-            s) relaunch "status" "$CURRENT_PERIOD" ;;
-            a) relaunch "ua" "$CURRENT_PERIOD" ;;
-            u) relaunch "uri" "$CURRENT_PERIOD" ;;
-            # Periodos
-            n) relaunch "$CURRENT_MODE" "now" ;;
-            h) relaunch "$CURRENT_MODE" "hundred" ;;
-            t) relaunch "$CURRENT_MODE" "thousand" ;;
-            c) relaunch "$CURRENT_MODE" "complete" ;;
+            d) change_mode "date" ;;
+            i) change_mode "ip" ;;
+            m) change_mode "method" ;;
+            s) change_mode "status" ;;
+            a) change_mode "ua" ;;
+            u) change_mode "uri" ;;
+            # CUANTOS
+            n) change_period "now" ;;
+            h) change_period "hundred" ;;
+            t) change_period "thousand" ;;
+            c) change_period "complete" ;;
             # Filtro (solo quitar)
             f)
-                if [[ -n "$FILTER_FIELD" ]]; then
-                    stop_tail
-                    # Reconstruir comando sin filtro
-                    local cmd_args=()
-                    if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
-                        cmd_args+=(--access-log "$LOG_FILE")
-                    fi
-                    cmd_args+=(--mode "$CURRENT_MODE" --how-many "$CURRENT_PERIOD")
-                    exec "$0" "${cmd_args[@]}"
-                fi
+                remove_filter
                 ;;
             # Selección por número (0-9) - aplica filtro
             [0-9])
                 if [[ -n "${HISTOGRAM_VALUES[$key]:-}" ]]; then
-                    stop_tail
-                    # Reconstruir comando con filtro
-                    local cmd_args=()
-                    if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
-                        cmd_args+=(--access-log "$LOG_FILE")
-                    fi
-                    cmd_args+=(--mode "$CURRENT_MODE" --how-many "$CURRENT_PERIOD" --filter-field "$CURRENT_MODE" --filter-value "${HISTOGRAM_VALUES[$key]}")
-                    exec "$0" "${cmd_args[@]}"
+                    apply_filter "$CURRENT_MODE" "${HISTOGRAM_VALUES[$key]}"
                 fi
                 ;;
             # Salir con 'q'
