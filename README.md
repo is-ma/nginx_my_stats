@@ -15,6 +15,7 @@ Monitor interactivo que muestra histogramas en tiempo real de diferentes campos 
 - **[s] status** - Códigos de respuesta HTTP
 - **[a] agent** - User Agents
 - **[u] uri** - URIs solicitadas
+- **[k] cache** - Estado de cache (HIT, MISS, BYPASS, etc.)
 
 **CUANTOS disponibles:**
 - **[n] now** - Tiempo real
@@ -83,6 +84,7 @@ El script espera logs en formato JSON con estos campos:
 - `time` - Tiempo de respuesta: `0.001`
 - `ua` - User Agent: `"Mozilla/5.0 (Windows NT 10.0; Win64; x64)..."`
 - `referer` - Referer: `""`
+- `cache` - Estado de cache: `"MISS"`, `"HIT"`, `"BYPASS"`, etc.
 - `host` - Host: `"rankeando.com"`
 
 ### Navegación
@@ -93,6 +95,7 @@ Una vez dentro del panel, usa las teclas para cambiar de vista:
 - `s` - Ver status codes
 - `a` - Ver User Agents
 - `u` - Ver URIs
+- `k` - Ver estados de cache
 - `n` - Cambiar a modo tiempo real
 - `h` - Cambiar a últimos 100 registros
 - `t` - Cambiar a últimos 1000 registros

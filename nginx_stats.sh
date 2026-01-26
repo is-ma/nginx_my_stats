@@ -8,7 +8,7 @@
 #
 # Uso:
 #   nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]
-#   Modos: date, ip, method, status, ua, uri (default: ip)
+#   Modos: date, ip, method, status, ua, uri, cache (default: ip)
 #   CUANTOS: now, hundred, thousand, complete (default: now)
 #   Filtro: campo y valor para filtrar (ej: --filter-field status --filter-value 404)
 #   Salir: q
@@ -166,6 +166,8 @@ show_histogram() {
     prop_line+="$(format_option a agent "$CURRENT_MODE" ua)"
     prop_line+="  "
     prop_line+="$(format_option u uri "$CURRENT_MODE" uri)"
+    prop_line+="  "
+    prop_line+="$(format_option k cache "$CURRENT_MODE" cache)"
 
     # Construir línea de CUANTOS
     period_line="CUANTOS: "
@@ -431,7 +433,7 @@ while [[ $# -gt 0 ]]; do
             echo "Error: Opción desconocida: $1"
             echo "Uso:"
             echo "  nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]"
-            echo "  Modos: date, ip, method, status, ua, uri"
+            echo "  Modos: date, ip, method, status, ua, uri, cache"
             echo "  CUANTOS: now, hundred, thousand, complete"
             exit 1
             ;;
@@ -445,7 +447,7 @@ done
 # Validar modo
 if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
     echo "Error: Modo inválido: $CURRENT_MODE"
-    echo "Modos válidos: date, ip, method, status, ua, uri"
+    echo "Modos válidos: date, ip, method, status, ua, uri, cache"
     exit 1
 fi
 
@@ -470,7 +472,7 @@ fi
 if [[ -n "$FILTER_FIELD" ]]; then
     if [[ -z "${MODE_FIELD[$FILTER_FIELD]:-}" ]]; then
         echo "Error: Campo de filtro inválido: $FILTER_FIELD"
-        echo "Campos válidos: date, ip, method, status, ua, uri"
+        echo "Campos válidos: date, ip, method, status, ua, uri, cache"
         exit 1
     fi
 fi
@@ -495,6 +497,7 @@ while true; do
             s) change_mode "status" ;;
             a) change_mode "ua" ;;
             u) change_mode "uri" ;;
+            k) change_mode "cache" ;;
             # CUANTOS
             n) change_period "now" ;;
             h) change_period "hundred" ;;
