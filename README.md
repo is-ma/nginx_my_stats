@@ -16,7 +16,7 @@ Monitor interactivo que muestra histogramas en tiempo real de diferentes campos 
 - **[a] agent** - User Agents
 - **[u] uri** - URIs solicitadas
 
-**Periodos disponibles:**
+**CUANTOS disponibles:**
 - **[n] now** - Tiempo real
 - **[h] hundred** - Últimos 100 registros
 - **[t] thousand** - Últimos 1000 registros
@@ -54,7 +54,7 @@ Agrega esto a tu `~/.bashrc` para acceso rápido:
 alias s='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh'
 # Atajo para filtrar por IP
 # ej. statspair ip 17.22.245.138
-alias s='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh ip thousand'
+alias s='/home/deploy/.is-ma/nginx_my_stats/nginx_stats.sh --mode ip --how-many thousand'
 ```
 
 Luego recarga tu configuración:

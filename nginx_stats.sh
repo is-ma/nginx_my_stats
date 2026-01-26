@@ -7,9 +7,9 @@
 # de Nginx con navegación por teclado
 #
 # Uso:
-#   nginx_stats [--access-log ARCHIVO] [--mode MODO] [--period PERIODO] [--filter-field CAMPO] [--filter-value VALOR]
+#   nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]
 #   Modos: date, ip, method, status, ua, uri (default: ip)
-#   Periodos: now, hundred, thousand, complete (default: now)
+#   CUANTOS: now, hundred, thousand, complete (default: now)
 #   Filtro: campo y valor para filtrar (ej: --filter-field status --filter-value 404)
 #   Salir: q
 # =================================================
@@ -294,8 +294,8 @@ relaunch() {
     # Agregar --mode
     cmd_args+=(--mode "$new_mode")
     
-    # Agregar --period
-    cmd_args+=(--period "$new_period")
+    # Agregar --how-many
+    cmd_args+=(--how-many "$new_period")
     
     # Agregar filtro si está presente
     if [[ -n "$FILTER_FIELD" ]]; then
@@ -340,9 +340,9 @@ while [[ $# -gt 0 ]]; do
             CURRENT_MODE="$2"
             shift 2
             ;;
-        --period)
+        --how-many)
             if [[ -z "${2:-}" ]]; then
-                echo "Error: --period requiere un valor"
+                echo "Error: --how-many requiere un valor"
                 exit 1
             fi
             CURRENT_PERIOD="$2"
@@ -367,9 +367,9 @@ while [[ $# -gt 0 ]]; do
         *)
             echo "Error: Opción desconocida: $1"
             echo "Uso:"
-            echo "  nginx_stats [--access-log ARCHIVO] [--mode MODO] [--period PERIODO] [--filter-field CAMPO] [--filter-value VALOR]"
+            echo "  nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]"
             echo "  Modos: date, ip, method, status, ua, uri"
-            echo "  Periodos: now, hundred, thousand, complete"
+            echo "  CUANTOS: now, hundred, thousand, complete"
             exit 1
             ;;
     esac
@@ -446,7 +446,7 @@ while true; do
                     if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
                         cmd_args+=(--access-log "$LOG_FILE")
                     fi
-                    cmd_args+=(--mode "$CURRENT_MODE" --period "$CURRENT_PERIOD")
+                    cmd_args+=(--mode "$CURRENT_MODE" --how-many "$CURRENT_PERIOD")
                     exec "$0" "${cmd_args[@]}"
                 fi
                 ;;
@@ -459,7 +459,7 @@ while true; do
                     if [[ "$LOG_FILE" != "/var/log/nginx/shield_access.log" ]]; then
                         cmd_args+=(--access-log "$LOG_FILE")
                     fi
-                    cmd_args+=(--mode "$CURRENT_MODE" --period "$CURRENT_PERIOD" --filter-field "$CURRENT_MODE" --filter-value "${HISTOGRAM_VALUES[$key]}")
+                    cmd_args+=(--mode "$CURRENT_MODE" --how-many "$CURRENT_PERIOD" --filter-field "$CURRENT_MODE" --filter-value "${HISTOGRAM_VALUES[$key]}")
                     exec "$0" "${cmd_args[@]}"
                 fi
                 ;;
