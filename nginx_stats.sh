@@ -142,6 +142,7 @@ compute_histogram() {
 
 # Función para mostrar el histograma (sin parpadeo)
 show_histogram() {
+    local highlight_q="${1:-false}"
     local output
     local prop_line
     local period_line
@@ -191,7 +192,11 @@ show_histogram() {
     # Definir colores
     local yellow_start=$'\e[93m'
     local reset=$'\e[0m'
-    output+="Salir: [${yellow_start}q${reset}]"
+    if [[ "$highlight_q" == "true" ]]; then
+        output+="Salir: [${yellow_start}q${reset}]"
+    else
+        output+="Salir: [q]"
+    fi
     output+=$'\n\n'
     output+="F      #  ${MODE_HEADER[$CURRENT_MODE]}"
     output+=$'\n'
@@ -416,7 +421,7 @@ fi
 
 # Loop principal
 while true; do
-    show_histogram
+    show_histogram "false"
 
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
@@ -460,6 +465,10 @@ while true; do
                 ;;
             # Salir con 'q'
             q)
+                # Mostrar la 'q' en amarillo antes de salir
+                show_histogram "true"
+                # Pequeña pausa para que se vea el cambio
+                sleep 0.2
                 cleanup
                 ;;
         esac
