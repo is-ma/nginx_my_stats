@@ -188,7 +188,7 @@ show_histogram() {
     output+=$'\n'
     output+="$filter_line"
     output+=$'\n'
-    output+="[q] Salir"
+    output+="Salir: [q]"
     output+=$'\n\n'
     output+="F      #  ${MODE_HEADER[$CURRENT_MODE]}"
     output+=$'\n'
