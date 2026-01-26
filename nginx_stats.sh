@@ -421,7 +421,7 @@ fi
 
 # Loop principal
 while true; do
-    show_histogram "false"
+    show_histogram
 
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
