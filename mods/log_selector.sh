@@ -1,6 +1,9 @@
 # Variable para guardar el archivo de log base (el original)
 BASE_LOG_FILE=""
 
+# Variable para guardar el modo anterior antes de entrar al selector de log
+PREVIOUS_MODE=""
+
 # Función para listar archivos de log disponibles
 list_log_files() {
     local log_dir
@@ -64,8 +67,12 @@ change_log_file() {
         # Cambiar el archivo de log
         LOG_FILE="${LOG_FILES[$index]}"
         
-        # Volver al modo ip por defecto
-        CURRENT_MODE="ip"
+        # Restaurar el modo anterior (guardado antes de entrar al selector)
+        if [[ -n "$PREVIOUS_MODE" ]]; then
+            CURRENT_MODE="$PREVIOUS_MODE"
+        else
+            CURRENT_MODE="ip"
+        fi
         
         # Recargar datos según el periodo actual
         if [[ "$CURRENT_PERIOD" == "now" ]]; then
