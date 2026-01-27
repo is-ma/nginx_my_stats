@@ -40,6 +40,7 @@ source "$SCRIPT_DIR/mods/histogram.sh"
 source "$SCRIPT_DIR/mods/data_loader.sh"
 source "$SCRIPT_DIR/mods/filter.sh"
 source "$SCRIPT_DIR/mods/log_selector.sh"
+source "$SCRIPT_DIR/mods/menu.sh"
 
 # Configurar trap
 trap cleanup SIGINT SIGTERM EXIT
@@ -161,10 +162,13 @@ fi
 
 # Loop principal
 while true; do
+    # Generar contenido según el modo actual
     if [[ "$CURRENT_MODE" == "log" ]]; then
-        show_log_selector
+        content=$(render_log_selector_content)
+        render_screen "$content"
     else
-        show_histogram
+        content=$(render_histogram_content)
+        render_screen "$content"
     fi
 
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
@@ -206,9 +210,11 @@ while true; do
             q)
                 # Mostrar la 'q' en amarillo antes de salir
                 if [[ "$CURRENT_MODE" == "log" ]]; then
-                    show_log_selector
+                    content=$(render_log_selector_content)
+                    render_screen "$content" "true"
                 else
-                    show_histogram "true"
+                    content=$(render_histogram_content)
+                    render_screen "$content" "true"
                 fi
                 # Pequeña pausa para que se vea el cambio
                 sleep 0.2

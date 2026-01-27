@@ -37,26 +37,23 @@ list_log_files() {
     LOG_FILES=("${files[@]}")
 }
 
-# Función para mostrar selector de logs
-show_log_selector() {
-    local output
+# Función para renderizar el contenido del selector de logs (sin menú)
+render_log_selector_content() {
+    local content=""
     local line_num=0
     
-    output=$(printf '\033[H\033[J')
-    output+="=== Selector de Log ==="
-    output+=$'\n\n'
-    output+="F       Log File"
-    output+=$'\n'
+    content+="F       Log File"
+    content+=$'\n'
     
     for log_file in "${LOG_FILES[@]}"; do
         if [[ $line_num -lt 10 ]]; then
-            output+="$line_num       $log_file"
-            output+=$'\n'
+            content+="$line_num       $log_file"
+            content+=$'\n'
         fi
         ((line_num++))
     done
     
-    printf '%s' "$output"
+    echo "$content"
 }
 
 # Función para cambiar el archivo de log y volver al modo anterior
