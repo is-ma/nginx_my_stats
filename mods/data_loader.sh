@@ -84,8 +84,8 @@ stop_tail() {
 change_mode() {
     local new_mode="$1"
     
-    # Validar modo
-    if [[ -z "${MODE_FIELD[$new_mode]:-}" ]]; then
+    # Validar modo - verificar si la clave existe en el array (no si el valor está vacío)
+    if [[ ! -v MODE_FIELD[$new_mode] ]]; then
         return 1
     fi
     
