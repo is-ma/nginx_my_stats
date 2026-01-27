@@ -44,32 +44,25 @@ show_log_selector() {
         ((line_num++))
     done
     
-    output+=$'\n'
-    output+="Presiona un número para seleccionar el log, o 'q' para volver"
-    
     printf '%s' "$output"
 }
 
-# Función para cambiar el archivo de log y reiniciar
+# Función para cambiar el archivo de log y volver al modo anterior
 change_log_file() {
     local index="$1"
     
     if [[ -n "${LOG_FILES[$index]:-}" ]]; then
-        local new_log="${LOG_FILES[$index]}"
+        # Cambiar el archivo de log
+        LOG_FILE="${LOG_FILES[$index]}"
         
-        # Construir comando para relanzar el script con los mismos parámetros
-        local cmd="$0"
-        cmd+=" --access-log \"$new_log\""
-        cmd+=" --mode \"$CURRENT_MODE\""
-        cmd+=" --how-many \"$CURRENT_PERIOD\""
+        # Volver al modo ip por defecto
+        CURRENT_MODE="ip"
         
-        if [[ -n "$FILTER_FIELD" ]]; then
-            cmd+=" --filter-field \"$FILTER_FIELD\""
-            cmd+=" --filter-value \"$FILTER_VALUE\""
+        # Recargar datos según el periodo actual
+        if [[ "$CURRENT_PERIOD" == "now" ]]; then
+            start_tail
+        else
+            load_data
         fi
-        
-        # Limpiar y ejecutar
-        cleanup
-        exec bash -c "$cmd"
     fi
 }
