@@ -1,19 +1,28 @@
+# Variable para guardar el archivo de log base (el original)
+BASE_LOG_FILE=""
+
 # Función para listar archivos de log disponibles
 list_log_files() {
-    local base_log="$LOG_FILE"
     local log_dir
     local base_name
     
-    log_dir=$(dirname "$base_log")
-    base_name=$(basename "$base_log")
+    # Si no tenemos el archivo base guardado, guardarlo ahora
+    if [[ -z "$BASE_LOG_FILE" ]]; then
+        # Extraer el nombre base sin sufijos de fecha
+        # Esto maneja casos como shield_access.log-20260127 -> shield_access.log
+        BASE_LOG_FILE=$(echo "$LOG_FILE" | sed 's/-[0-9]\{8\}$//')
+    fi
+    
+    log_dir=$(dirname "$BASE_LOG_FILE")
+    base_name=$(basename "$BASE_LOG_FILE")
     
     # Buscar archivos que coincidan con el patrón
     # Primero el archivo actual, luego los rotados ordenados por fecha
     local files=()
     
     # Añadir el archivo principal si existe
-    if [[ -f "$base_log" ]]; then
-        files+=("$base_log")
+    if [[ -f "$BASE_LOG_FILE" ]]; then
+        files+=("$BASE_LOG_FILE")
     fi
     
     # Añadir archivos rotados (ordenados por fecha, más reciente primero)
