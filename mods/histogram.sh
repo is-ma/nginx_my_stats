@@ -57,6 +57,8 @@ show_histogram() {
     prop_line+="$(format_option r referer "$CURRENT_MODE" referer)"
     prop_line+="  "
     prop_line+="$(format_option o host "$CURRENT_MODE" host)"
+    prop_line+="  "
+    prop_line+="$(format_option g log "$CURRENT_MODE" log)"
 
     # Construir línea de CUANTOS
     period_line="Cantidad: "

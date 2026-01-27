@@ -91,6 +91,13 @@ change_mode() {
     
     CURRENT_MODE="$new_mode"
     
+    # Si es modo log, no iniciar tail ni cargar datos
+    if [[ "$new_mode" == "log" ]]; then
+        stop_tail
+        list_log_files
+        return 0
+    fi
+    
     # Si estamos en modo now, reiniciar tail con el nuevo campo
     if [[ "$CURRENT_PERIOD" == "now" ]]; then
         stop_tail

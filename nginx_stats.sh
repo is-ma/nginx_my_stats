@@ -8,7 +8,7 @@
 #
 # Uso:
 #   nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]
-#   Modos: date, ip, method, status, ua, uri, cache, lang, referer, host (default: ip)
+#   Modos: date, ip, method, status, ua, uri, cache, lang, referer, host, log (default: ip)
 #   CUANTOS: now, hundred, thousand, complete (default: now)
 #   Filtro: campo y valor para filtrar (ej: --filter-field status --filter-value 404)
 #   Salir: q
@@ -31,6 +31,7 @@ FILTER_FIELD=""
 FILTER_VALUE=""
 declare -a HISTOGRAM_VALUES=()  # Para selección por número
 CACHED_HISTOGRAM=""  # Cache para modos estáticos (hundred, thousand, complete)
+declare -a LOG_FILES=()  # Para selector de logs
 
 
 # Cargar módulos (funciones)
@@ -38,6 +39,7 @@ source "$SCRIPT_DIR/mods/helpers.sh"
 source "$SCRIPT_DIR/mods/histogram.sh"
 source "$SCRIPT_DIR/mods/data_loader.sh"
 source "$SCRIPT_DIR/mods/filter.sh"
+source "$SCRIPT_DIR/mods/log_selector.sh"
 
 # Configurar trap
 trap cleanup SIGINT SIGTERM EXIT
@@ -102,7 +104,7 @@ while [[ $# -gt 0 ]]; do
             echo "Error: Opción desconocida: $1"
             echo "Uso:"
             echo "  nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]"
-            echo "  Modos: date, ip, method, status, ua, uri, cache, lang, referer, host"
+            echo "  Modos: date, ip, method, status, ua, uri, cache, lang, referer, host, log"
             echo "  CUANTOS: now, hundred, thousand, complete"
             exit 1
             ;;
@@ -116,7 +118,7 @@ done
 # Validar modo
 if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
     echo "Error: Modo inválido: $CURRENT_MODE"
-    echo "Modos válidos: date, ip, method, status, ua, uri, cache, lang, referer, host"
+    echo "Modos válidos: date, ip, method, status, ua, uri, cache, lang, referer, host, log"
     exit 1
 fi
 
@@ -146,16 +148,24 @@ if [[ -n "$FILTER_FIELD" ]]; then
     fi
 fi
 
-# Iniciar según el periodo
-if [[ "$CURRENT_PERIOD" == "now" ]]; then
-    start_tail
+# Iniciar según el periodo (solo si no estamos en modo log)
+if [[ "$CURRENT_MODE" != "log" ]]; then
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        start_tail
+    else
+        load_data
+    fi
 else
-    load_data
+    list_log_files
 fi
 
 # Loop principal
 while true; do
-    show_histogram
+    if [[ "$CURRENT_MODE" == "log" ]]; then
+        show_log_selector
+    else
+        show_histogram
+    fi
 
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
@@ -170,6 +180,7 @@ while true; do
             l) change_mode "lang" ;;
             r) change_mode "referer" ;;
             o) change_mode "host" ;;
+            g) change_mode "log" ;;
             # CUANTOS
             n) change_period "now" ;;
             h) change_period "hundred" ;;
@@ -179,16 +190,26 @@ while true; do
             f)
                 remove_filter
                 ;;
-            # Selección por número (0-9) - aplica filtro
+            # Selección por número (0-9)
             [0-9])
-                if [[ -n "${HISTOGRAM_VALUES[$key]:-}" ]]; then
-                    apply_filter "$CURRENT_MODE" "${HISTOGRAM_VALUES[$key]}"
+                if [[ "$CURRENT_MODE" == "log" ]]; then
+                    # En modo log, cambiar archivo de log
+                    change_log_file "$key"
+                else
+                    # En otros modos, aplicar filtro
+                    if [[ -n "${HISTOGRAM_VALUES[$key]:-}" ]]; then
+                        apply_filter "$CURRENT_MODE" "${HISTOGRAM_VALUES[$key]}"
+                    fi
                 fi
                 ;;
             # Salir con 'q'
             q)
                 # Mostrar la 'q' en amarillo antes de salir
-                show_histogram "true"
+                if [[ "$CURRENT_MODE" == "log" ]]; then
+                    show_log_selector
+                else
+                    show_histogram "true"
+                fi
                 # Pequeña pausa para que se vea el cambio
                 sleep 0.2
                 cleanup

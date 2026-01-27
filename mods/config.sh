@@ -15,6 +15,7 @@ declare -A MODE_FIELD=(
     [lang]=".lang"
     [referer]=".referer"
     [host]=".host"
+    [log]=""
 )
 
 declare -A MODE_TITLE=(
@@ -28,6 +29,7 @@ declare -A MODE_TITLE=(
     [lang]="Top Languages"
     [referer]="Top Referers"
     [host]="Top Hosts"
+    [log]="Selector de Log"
 )
 
 declare -A PERIOD_TITLE=(
@@ -51,4 +53,5 @@ declare -A MODE_HEADER=(
     [lang]="Language"
     [referer]="Referer"
     [host]="Host"
+    [log]="Log File"
 )
