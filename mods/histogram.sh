@@ -37,7 +37,7 @@ show_histogram() {
     fi
 
     # Construir línea de propiedades
-    prop_line="Propiedad: "
+    prop_line="Función: "
     prop_line+="$(format_option d date "$CURRENT_MODE" date)"
     prop_line+="  "
     prop_line+="$(format_option i ip "$CURRENT_MODE" ip)"
@@ -59,7 +59,7 @@ show_histogram() {
     prop_line+="$(format_option o host "$CURRENT_MODE" host)"
 
     # Construir línea de CUANTOS
-    period_line="CUANTOS: "
+    period_line="Cantidad: "
     period_line+="$(format_option n now "$CURRENT_PERIOD" now)"
     period_line+="  "
     period_line+="$(format_option h hundred "$CURRENT_PERIOD" hundred)"
