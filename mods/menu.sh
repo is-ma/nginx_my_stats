@@ -91,9 +91,12 @@ render_screen() {
     output+=$'\n'
     
     # Agregar contenido específico
+    # Eliminar nueva línea al final si existe
+    content="${content%$'\n'}"
     output+="$content"
     
     # Agregar línea en blanco y prompt de opción
+    output+=$'\n'
     output+=$'\n'
     output+="Opción: "
     
