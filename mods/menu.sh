@@ -8,11 +8,12 @@ render_header() {
     echo "=== ${title} (${period}) ==="
 }
 
-# Función para renderizar el menú (propiedades, cantidad, filtro, salir)
+# Función para renderizar el menú (propiedades, cantidad, resultados, filtro, salir)
 render_menu() {
     local highlight_q="${1:-false}"
     local prop_line
     local period_line
+    local max_results_line
     local filter_line
     local exit_line
 
@@ -50,6 +51,9 @@ render_menu() {
     period_line+="  "
     period_line+="$(format_option c complete "$CURRENT_PERIOD" complete)"
 
+    # Construir línea de resultados máximos
+    max_results_line=$(format_max_results_line)
+
     # Construir línea de filtro
     filter_line=$(format_filter_line)
 
@@ -64,6 +68,7 @@ render_menu() {
 
     echo "$prop_line"
     echo "$period_line"
+    echo "$max_results_line"
     echo "$filter_line"
     echo "$exit_line"
 }

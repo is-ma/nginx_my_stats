@@ -30,6 +30,41 @@ format_option() {
     fi
 }
 
+# Función para formatear línea de resultados máximos
+format_max_results_line() {
+    local yellow_start=$'\e[93m'
+    local reset=$'\e[0m'
+    
+    local line="Resultados: "
+    
+    # Opción ten
+    if [[ "$CURRENT_MAX_RESULTS" == "ten" ]]; then
+        line+="[${yellow_start}e${reset}] ${yellow_start}ten${reset}"
+    else
+        line+="[e] ten"
+    fi
+    
+    line+="  "
+    
+    # Opción twenty
+    if [[ "$CURRENT_MAX_RESULTS" == "twenty" ]]; then
+        line+="[${yellow_start}w${reset}] ${yellow_start}twenty${reset}"
+    else
+        line+="[w] twenty"
+    fi
+    
+    line+="  "
+    
+    # Opción thirty
+    if [[ "$CURRENT_MAX_RESULTS" == "thirty" ]]; then
+        line+="[${yellow_start}y${reset}] ${yellow_start}thirty${reset}"
+    else
+        line+="[y] thirty"
+    fi
+    
+    echo "$line"
+}
+
 # Función para formatear línea de filtro
 format_filter_line() {
     local yellow_start=$'\e[93m'

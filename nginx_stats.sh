@@ -115,6 +115,8 @@ done
 # Establecer valores por defecto si no se proporcionaron
 : "${CURRENT_MODE:=ip}"
 : "${CURRENT_PERIOD:=now}"
+: "${CURRENT_MAX_RESULTS:=thirty}"
+TOP_N="${MAX_RESULTS_OPTIONS[$CURRENT_MAX_RESULTS]}"
 
 # Validar modo
 if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
@@ -190,6 +192,10 @@ while true; do
             h) change_period "hundred" ;;
             t) change_period "thousand" ;;
             c) change_period "complete" ;;
+            # Resultados máximos
+            e) change_max_results "ten" ;;
+            w) change_max_results "twenty" ;;
+            y) change_max_results "thirty" ;;
             # Filtro (solo quitar)
             f)
                 remove_filter

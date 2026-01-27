@@ -131,3 +131,25 @@ change_period() {
         load_data
     fi
 }
+
+# Función para cambiar el número máximo de resultados
+change_max_results() {
+    local new_max="$1"
+    
+    # Validar opción
+    if [[ -z "${MAX_RESULTS_OPTIONS[$new_max]:-}" ]]; then
+        return 1
+    fi
+    
+    CURRENT_MAX_RESULTS="$new_max"
+    TOP_N="${MAX_RESULTS_OPTIONS[$new_max]}"
+    
+    # Recargar datos para reflejar el nuevo límite
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        # En modo now, el histograma se recalcula cada vez
+        # No necesitamos reiniciar tail, solo forzar recálculo
+        :
+    else
+        load_data
+    fi
+}

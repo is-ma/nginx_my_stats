@@ -3,6 +3,9 @@ LOG_FILE="/var/log/nginx/shield_access.log"
 REFRESH_INTERVAL=2
 TOP_N=30
 
+# Variable para el número máximo de resultados mostrados
+CURRENT_MAX_RESULTS="thirty"
+
 # Arrays de configuración de modos
 declare -A MODE_FIELD=(
     [date]=".date"
@@ -54,4 +57,17 @@ declare -A MODE_HEADER=(
     [referer]="Referer"
     [host]="Host"
     [log]="Log File"
+)
+
+# Configuración para opciones de resultados
+declare -A MAX_RESULTS_OPTIONS=(
+    [ten]=10
+    [twenty]=20
+    [thirty]=30
+)
+
+declare -A MAX_RESULTS_TITLE=(
+    [ten]="ten"
+    [twenty]="twenty"
+    [thirty]="thirty"
 )
