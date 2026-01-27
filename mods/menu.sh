@@ -93,5 +93,9 @@ render_screen() {
     # Agregar contenido específico
     output+="$content"
     
+    # Agregar línea en blanco y prompt de opción
+    output+=$'\n'
+    output+="Opción: "
+    
     printf '%s' "$output"
 }
