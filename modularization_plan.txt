@@ -1,0 +1,56 @@
+# Plan de modularización para nginx_stats.sh
+
+## Objetivo
+Dividir el script monolítico (~570 líneas) en módulos especializados ubicados en la carpeta `/mods`, para facilitar mantenimiento y futuras extensiones.
+
+## Estructura propuesta
+
+1. **mods/config.sh** – Variables de configuración y declaraciones de arrays:
+   - LOG_FILE, REFRESH_INTERVAL, TOP_N
+   - Arrays: MODE_FIELD, MODE_TITLE, PERIOD_TITLE, MODE_HEADER
+   - Variables de estado (CURRENT_MODE, FILTER_FIELD, etc.) se definen en principal y se exportan.
+
+2. **mods/helpers.sh** – Funciones utilitarias:
+   - cleanup
+   - format_option, format_filter_line
+   - verificación de dependencias (jq, archivo log)
+   - procesamiento de argumentos (podría moverse a principal)
+
+3. **mods/histogram.sh** – Cálculo y presentación del histograma:
+   - compute_histogram
+   - show_histogram
+   - manejo de HISTOGRAM_VALUES y CACHED_HISTOGRAM
+
+4. **mods/data_loader.sh** – Manejo de datos:
+   - build_jq_expr
+   - load_data
+   - start_tail, stop_tail
+   - change_mode, change_period
+
+5. **mods/filter.sh** – Lógica de filtrado:
+   - apply_filter, remove_filter
+
+6. **mods/menu.sh** – Gestión de la interfaz de usuario y teclas:
+   - bucle principal (puede quedarse en principal) pero las acciones de teclas se podrían manejar con dispatch.
+
+7. **nginx_stats.sh** (reducido) – Flujo principal:
+   - Cargar módulos (source)
+   - Inicializar variables
+   - Procesar argumentos
+   - Configurar traps
+   - Iniciar modo/periodo
+   - Ejecutar bucle principal (mostrar histograma y leer tecla)
+
+## Detalles de implementación
+- Cada módulo deberá tener acceso a las variables globales del script principal; se puede lograr mediante `source` en el mismo shell, sin exportar.
+- Se mantendrá compatibilidad con todas las opciones de línea de comandos.
+- El rendimiento debe mantenerse igual.
+- Se debe crear el directorio `mods` al lado del script.
+
+## Pasos a seguir (si se aprueba)
+1. Crear carpeta `mods`.
+2. Para cada módulo, extraer las funciones y variables correspondientes del script actual.
+3. Reemplazar en nginx_stats.sh los bloques extraídos con líneas `source mods/archivo.sh`.
+4. Probar que todo funcione igual.
+
+¿Apruebas esta ruta de acción? Si es así, procederé a crear los SEARCH/REPLACE blocks necesarios.
