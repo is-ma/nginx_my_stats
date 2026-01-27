@@ -8,7 +8,7 @@
 #
 # Uso:
 #   nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]
-#   Modos: date, ip, method, status, ua, uri, cache, lang (default: ip)
+#   Modos: date, ip, method, status, ua, uri, cache, lang, referer, host (default: ip)
 #   CUANTOS: now, hundred, thousand, complete (default: now)
 #   Filtro: campo y valor para filtrar (ej: --filter-field status --filter-value 404)
 #   Salir: q
@@ -41,6 +41,8 @@ declare -A MODE_FIELD=(
     [uri]=".uri"
     [cache]=".cache"
     [lang]=".lang"
+    [referer]=".referer"
+    [host]=".host"
 )
 
 declare -A MODE_TITLE=(
@@ -52,6 +54,8 @@ declare -A MODE_TITLE=(
     [uri]="Top URIs"
     [cache]="Top Cache Status"
     [lang]="Top Languages"
+    [referer]="Top Referers"
+    [host]="Top Hosts"
 )
 
 declare -A PERIOD_TITLE=(
@@ -73,6 +77,8 @@ declare -A MODE_HEADER=(
     [ua]="User Agent"
     [uri]="URI"
     [lang]="Language"
+    [referer]="Referer"
+    [host]="Host"
 )
 
 # Función de limpieza
@@ -179,6 +185,10 @@ show_histogram() {
     prop_line+="$(format_option k cache "$CURRENT_MODE" cache)"
     prop_line+="  "
     prop_line+="$(format_option l lang "$CURRENT_MODE" lang)"
+    prop_line+="  "
+    prop_line+="$(format_option r referer "$CURRENT_MODE" referer)"
+    prop_line+="  "
+    prop_line+="$(format_option o host "$CURRENT_MODE" host)"
 
     # Construir línea de CUANTOS
     period_line="CUANTOS: "
@@ -444,7 +454,7 @@ while [[ $# -gt 0 ]]; do
             echo "Error: Opción desconocida: $1"
             echo "Uso:"
             echo "  nginx_stats [--access-log ARCHIVO] [--mode MODO] [--how-many CUANTOS] [--filter-field CAMPO] [--filter-value VALOR]"
-            echo "  Modos: date, ip, method, status, ua, uri, cache, lang"
+            echo "  Modos: date, ip, method, status, ua, uri, cache, lang, referer, host"
             echo "  CUANTOS: now, hundred, thousand, complete"
             exit 1
             ;;
@@ -458,7 +468,7 @@ done
 # Validar modo
 if [[ -z "${MODE_FIELD[$CURRENT_MODE]:-}" ]]; then
     echo "Error: Modo inválido: $CURRENT_MODE"
-    echo "Modos válidos: date, ip, method, status, ua, uri, cache, lang"
+    echo "Modos válidos: date, ip, method, status, ua, uri, cache, lang, referer, host"
     exit 1
 fi
 
@@ -483,7 +493,7 @@ fi
 if [[ -n "$FILTER_FIELD" ]]; then
     if [[ -z "${MODE_FIELD[$FILTER_FIELD]:-}" ]]; then
         echo "Error: Campo de filtro inválido: $FILTER_FIELD"
-        echo "Campos válidos: date, ip, method, status, ua, uri, cache, lang"
+        echo "Campos válidos: date, ip, method, status, ua, uri, cache, lang, referer, host"
         exit 1
     fi
 fi
@@ -510,6 +520,8 @@ while true; do
             u) change_mode "uri" ;;
             k) change_mode "cache" ;;
             l) change_mode "lang" ;;
+            r) change_mode "referer" ;;
+            o) change_mode "host" ;;
             # CUANTOS
             n) change_period "now" ;;
             h) change_period "hundred" ;;
