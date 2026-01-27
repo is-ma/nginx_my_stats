@@ -16,8 +16,11 @@
 
 set -uo pipefail
 
+# Determinar directorio donde está el script
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
 # Configuración (cargada desde módulo)
-source mods/config.sh
+source "$SCRIPT_DIR/mods/config.sh"
 
 # Variables de estado
 TAIL_PID=""
@@ -31,10 +34,10 @@ CACHED_HISTOGRAM=""  # Cache para modos estáticos (hundred, thousand, complete)
 
 
 # Cargar módulos (funciones)
-source mods/helpers.sh
-source mods/histogram.sh
-source mods/data_loader.sh
-source mods/filter.sh
+source "$SCRIPT_DIR/mods/helpers.sh"
+source "$SCRIPT_DIR/mods/histogram.sh"
+source "$SCRIPT_DIR/mods/data_loader.sh"
+source "$SCRIPT_DIR/mods/filter.sh"
 
 # Configurar trap
 trap cleanup SIGINT SIGTERM EXIT
