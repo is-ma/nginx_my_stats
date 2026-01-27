@@ -76,6 +76,12 @@ render_screen() {
     # Limpiar pantalla
     local output=$(printf '\033[H\033[J')
     
+    # Agregar línea del archivo de log
+    local log_name
+    log_name=$(basename "$LOG_FILE")
+    output+="### Log: $log_name"
+    output+=$'\n'
+    
     # Agregar encabezado
     output+=$(render_header)
     output+=$'\n'
