@@ -31,48 +31,47 @@ compute_histogram() {
 
 # Función especial para calcular histograma de tiempos por intervalos
 compute_time_histogram() {
-    local line_num=0
+    # Construir script awk usando los intervalos definidos
+    local awk_script='BEGIN {'
+    for ((i=0; i<NUM_TIME_INTERVALS; i++)); do
+        awk_script+=" counts[$i]=0;"
+    done
+    awk_script+=' total=0; }'
+    awk_script+=' { if ($0 == "") next; t = $1 + 0; '
+    for ((i=0; i<NUM_TIME_INTERVALS; i++)); do
+        local min_val="${TIME_INTERVAL_MIN[$i]}"
+        local max_val="${TIME_INTERVAL_MAX[$i]}"
+        if [[ "$max_val" == "inf" ]]; then
+            awk_script+=" if (t >= $min_val) { counts[$i]++; total++; next; } "
+        else
+            awk_script+=" if (t >= $min_val && t < $max_val) { counts[$i]++; total++; next; } "
+        fi
+    done
+    awk_script+=' }'
+    awk_script+=" END { for (i=0; i<$NUM_TIME_INTERVALS; i++) print counts[i]; print total; }"
+    
+    local results
+    results=$(awk "$awk_script" "$TEMP_FILE" 2>/dev/null)
+    
     local counts=()
     local total_count=0
-    
-    # Inicializar array de conteos
-    for ((i=0; i<NUM_TIME_INTERVALS; i++)); do
-        counts[$i]=0
-    done
-    
-    # Leer tiempos y contar por intervalos
-    while IFS= read -r time_str; do
-        if [[ -n "$time_str" ]]; then
-            # Convertir a número (manejar posibles comillas o formato string)
-            local time_val=$(echo "$time_str" | sed 's/"//g')
-            
-            # Determinar en qué intervalo cae
-            for ((i=0; i<NUM_TIME_INTERVALS; i++)); do
-                local min_val="${TIME_INTERVAL_MIN[$i]}"
-                local max_val="${TIME_INTERVAL_MAX[$i]}"
-                
-                if [[ "$max_val" == "inf" ]]; then
-                    # Último intervalo: t ≥ min_val
-                    if (( $(echo "$time_val >= $min_val" | bc -l) )); then
-                        ((counts[$i]++))
-                        ((total_count++))
-                        break
-                    fi
-                else
-                    # Intervalo normal: min_val ≤ t < max_val
-                    if (( $(echo "$time_val >= $min_val && $time_val < $max_val" | bc -l) )); then
-                        ((counts[$i]++))
-                        ((total_count++))
-                        break
-                    fi
-                fi
-            done
-        fi
-    done < "$TEMP_FILE"
-    
-    # Construir histograma ordenado por conteo (pero mostramos todos los intervalos)
-    # Para el modo time, queremos mostrar los intervalos en orden fijo, no ordenados por frecuencia
-    # Pero para mantener consistencia con el formato, podemos mostrarlos en orden fijo
+    if [[ -n "$results" ]]; then
+        # Leer conteos
+        local i=0
+        while IFS= read -r line; do
+            if [[ $i -lt $NUM_TIME_INTERVALS ]]; then
+                counts[$i]=$line
+            else
+                total_count=$line
+            fi
+            ((i++))
+        done <<< "$results"
+    else
+        # Archivo vacío: todos ceros
+        for ((i=0; i<NUM_TIME_INTERVALS; i++)); do
+            counts[$i]=0
+        done
+    fi
     
     HISTOGRAM_VALUES=()
     CACHED_HISTOGRAM=""
@@ -82,8 +81,6 @@ compute_time_histogram() {
         local count="${counts[$i]}"
         local line
         
-        # Solo mostrar si hay datos o si es uno de los primeros 10 para selección
-        # (mostramos todos los intervalos como solicitaste)
         if [[ $i -lt 10 ]]; then
             line=$(printf "%-6s %s" "$count" "$label")
             CACHED_HISTOGRAM+="$i $line"$'\n'
@@ -92,11 +89,9 @@ compute_time_histogram() {
             CACHED_HISTOGRAM+="  $line"$'\n'
         fi
         
-        # Guardar el label en HISTOGRAM_VALUES para filtrado
         HISTOGRAM_VALUES+=("$label")
     done
     
-    # Añadir línea total si hay datos
     if [[ $total_count -gt 0 ]]; then
         CACHED_HISTOGRAM=$(echo -e "Total: $total_count\n$CACHED_HISTOGRAM")
     fi
@@ -105,14 +100,8 @@ compute_time_histogram() {
 # Función para renderizar el contenido del histograma (sin menú)
 render_histogram_content() {
     # En modo now, recalcular cada vez; en otros modos, usar cache
-    if [[ "$CURRENT_PERIOD" == "now" ]] || [[ "$CURRENT_MODE" == "time" ]]; then
-        # Para el modo time, siempre recalcular para mostrar conteos actualizados
-        # Para otros modos, mantener el comportamiento original
-        if [[ "$CURRENT_MODE" == "time" ]]; then
-            compute_histogram
-        elif [[ "$CURRENT_PERIOD" == "now" ]]; then
-            compute_histogram
-        fi
+    if [[ "$CURRENT_PERIOD" == "now" ]]; then
+        compute_histogram
     fi
 
     local content=""
