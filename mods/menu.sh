@@ -23,6 +23,8 @@ render_menu() {
     prop_line+="  "
     prop_line+="$(format_option i ip "$CURRENT_MODE" ip)"
     prop_line+="  "
+    prop_line+="$(format_option m method "$CURRENT_MODE" method)"   # Restaurado
+    prop_line+="  "
     prop_line+="$(format_option s status "$CURRENT_MODE" status)"
     prop_line+="  "
     prop_line+="$(format_option a agent "$CURRENT_MODE" ua)"
@@ -37,7 +39,7 @@ render_menu() {
     prop_line+="  "
     prop_line+="$(format_option o host "$CURRENT_MODE" host)"
     prop_line+="  "
-    prop_line+="$(format_option m time "$CURRENT_MODE" time)"   # Nueva opción con letra 'm'
+    prop_line+="$(format_option x time "$CURRENT_MODE" time)"   # Cambiado de 'm' a 'x'
     prop_line+="  "
     prop_line+="$(format_option g log "$CURRENT_MODE" log)"
 
