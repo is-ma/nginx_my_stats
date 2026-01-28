@@ -151,34 +151,36 @@ if [[ -n "$FILTER_FIELD" ]]; then
     fi
 fi
 
-# Iniciar según el periodo (solo si no estamos en modo log)
-if [[ "$CURRENT_MODE" != "log" ]]; then
+# Iniciar según el periodo (solo si no estamos en modo log o time)
+if [[ "$CURRENT_MODE" != "log" && "$CURRENT_MODE" != "time" ]]; then
     if [[ "$CURRENT_PERIOD" == "now" ]]; then
         start_tail
     else
         load_data
     fi
-else
+elif [[ "$CURRENT_MODE" == "log" ]]; then
     list_log_files
 fi
+# Si el modo es "time", no hacemos nada - solo mostrará el mensaje
 
 # Loop principal
 while true; do
     # Generar contenido según el modo actual
     if [[ "$CURRENT_MODE" == "log" ]]; then
         content=$(render_log_selector_content)
-        render_screen "$content"
+    elif [[ "$CURRENT_MODE" == "time" ]]; then
+        # Modo time - mostrar mensaje temporal
+        content="Estoy dentro de time."
     else
         content=$(render_histogram_content)
-        render_screen "$content"
     fi
+    render_screen "$content"
 
     if read -t "$REFRESH_INTERVAL" -n 1 key 2>/dev/null; then
         case "$key" in
             # Propiedades
             d) change_mode "date" ;;
             i) change_mode "ip" ;;
-            m) change_mode "method" ;;
             s) change_mode "status" ;;
             a) change_mode "ua" ;;
             u) change_mode "uri" ;;
@@ -186,6 +188,7 @@ while true; do
             l) change_mode "lang" ;;
             r) change_mode "referer" ;;
             o) change_mode "host" ;;
+            m) change_mode "time" ;;   # Cambiado de "method" a "time"
             g) change_mode "log" ;;
             # CUANTOS
             n) change_period "now" ;;

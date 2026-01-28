@@ -98,6 +98,13 @@ change_mode() {
         return 0
     fi
     
+    # Si es modo time, detener tail y no cargar datos
+    if [[ "$new_mode" == "time" ]]; then
+        CURRENT_MODE="$new_mode"
+        stop_tail
+        return 0
+    fi
+    
     CURRENT_MODE="$new_mode"
     
     # Si estamos en modo now, reiniciar tail con el nuevo campo
