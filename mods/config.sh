@@ -10,7 +10,6 @@ CURRENT_MAX_RESULTS="thirty"
 declare -A MODE_FIELD=(
     [date]=".date"
     [ip]=".ip"
-    [method]=".method"
     [status]=".status"
     [ua]=".ua"
     [uri]=".uri"
@@ -18,13 +17,13 @@ declare -A MODE_FIELD=(
     [lang]=".lang"
     [referer]=".referer"
     [host]=".host"
+    [time]=".date"   # Temporal - usa el mismo campo que date por ahora
     [log]=""
 )
 
 declare -A MODE_TITLE=(
     [date]="Top Fechas"
     [ip]="Top IPs"
-    [method]="Top Métodos HTTP"
     [status]="Top Status Codes"
     [ua]="Top User Agents"
     [uri]="Top URIs"
@@ -32,6 +31,7 @@ declare -A MODE_TITLE=(
     [lang]="Top Languages"
     [referer]="Top Referers"
     [host]="Top Hosts"
+    [time]="Top Time"
     [log]="Selector de Log"
 )
 
@@ -45,17 +45,14 @@ declare -A PERIOD_TITLE=(
 declare -A MODE_HEADER=(
     [date]="Fecha"
     [ip]="IP"
-    [method]="Método"
     [status]="Status"
     [ua]="User Agent"
     [uri]="URI"
     [cache]="Cache"
-    [status]="Status"
-    [ua]="User Agent"
-    [uri]="URI"
     [lang]="Language"
     [referer]="Referer"
     [host]="Host"
+    [time]="Time"
     [log]="Log File"
 )
 
