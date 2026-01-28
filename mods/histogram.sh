@@ -93,7 +93,7 @@ compute_time_histogram() {
     done
     
     if [[ $total_count -gt 0 ]]; then
-        CACHED_HISTOGRAM=$(echo -e "Total: $total_count\n$CACHED_HISTOGRAM")
+        CACHED_HISTOGRAM+="Total: $total_count"$'\n'
     fi
 }
 

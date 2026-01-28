@@ -31,7 +31,7 @@ list_log_files() {
     # Añadir archivos rotados (ordenados por fecha, más reciente primero)
     while IFS= read -r file; do
         files+=("$file")
-    done < <(sudo ls -t "$log_dir/${base_name}"-* 2>/dev/null | head -n 9)
+    done < <(${SUDO_CMD} ls -t "$log_dir/${base_name}"-* 2>/dev/null | head -n 9)
     
     # Guardar en array global
     LOG_FILES=("${files[@]}")

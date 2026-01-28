@@ -56,9 +56,9 @@ load_data() {
     jq_expr=$(build_jq_expr "$field" "$FILTER_FIELD" "$FILTER_VALUE")
 
     if [[ -n "$lines" ]]; then
-        sudo tail -n "$lines" "$LOG_FILE" | jq -r "$jq_expr" > "$TEMP_FILE"
+        ${SUDO_CMD} tail -n "$lines" "$LOG_FILE" | jq -r "$jq_expr" > "$TEMP_FILE"
     else
-        sudo jq -r "$jq_expr" "$LOG_FILE" > "$TEMP_FILE"
+        ${SUDO_CMD} jq -r "$jq_expr" "$LOG_FILE" > "$TEMP_FILE"
     fi
 
     # Calcular histograma una sola vez para modos estáticos
@@ -80,7 +80,7 @@ start_tail() {
 
     jq_expr=$(build_jq_expr "$field" "$FILTER_FIELD" "$FILTER_VALUE")
 
-    sudo tail -f "$LOG_FILE" | jq --unbuffered -r "$jq_expr" >> "$TEMP_FILE" &
+    ${SUDO_CMD} tail -f "$LOG_FILE" | jq --unbuffered -r "$jq_expr" >> "$TEMP_FILE" &
     TAIL_PID=$!
 }
 

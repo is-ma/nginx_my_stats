@@ -22,6 +22,12 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # Configuración (cargada desde módulo)
 source "$SCRIPT_DIR/mods/config.sh"
 
+# Determinar si necesitamos sudo
+SUDO_CMD="sudo"
+if [[ $EUID -eq 0 ]]; then
+    SUDO_CMD=""
+fi
+
 # Variables de estado
 TAIL_PID=""
 TEMP_FILE=""
