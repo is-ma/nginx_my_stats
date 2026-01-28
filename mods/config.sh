@@ -18,7 +18,7 @@ declare -A MODE_FIELD=(
     [lang]=".lang"
     [referer]=".referer"
     [host]=".host"
-    [time]=".date"   # Temporal - usa el mismo campo que date por ahora
+    [time]=".time"   # Cambiado a .time para usar el campo correcto
     [log]=""
 )
 
@@ -71,3 +71,46 @@ declare -A MAX_RESULTS_TITLE=(
     [twenty]="twenty"
     [thirty]="thirty"
 )
+
+# Configuración de intervalos de tiempo para el modo time (10 intervalos)
+declare -a TIME_INTERVAL_LABELS=(
+    "[0.000 ≤ t < 0.010]"
+    "[0.010 ≤ t < 0.020]"
+    "[0.020 ≤ t < 0.050]"
+    "[0.050 ≤ t < 0.100]"
+    "[0.100 ≤ t < 0.250]"
+    "[0.250 ≤ t < 0.500]"
+    "[0.500 ≤ t < 1.000]"
+    "[1.000 ≤ t < 2.000]"
+    "[2.000 ≤ t < 3.000]"
+    "[        t ≥ 3.000]"
+)
+
+declare -a TIME_INTERVAL_MIN=(
+    "0.000"
+    "0.010"
+    "0.020"
+    "0.050"
+    "0.100"
+    "0.250"
+    "0.500"
+    "1.000"
+    "2.000"
+    "3.000"
+)
+
+declare -a TIME_INTERVAL_MAX=(
+    "0.010"
+    "0.020"
+    "0.050"
+    "0.100"
+    "0.250"
+    "0.500"
+    "1.000"
+    "2.000"
+    "3.000"
+    "inf"
+)
+
+# Número total de intervalos de tiempo (ahora 10)
+NUM_TIME_INTERVALS=10

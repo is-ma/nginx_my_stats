@@ -8,8 +8,37 @@ apply_filter() {
         return 1
     fi
     
-    FILTER_FIELD="$field"
-    FILTER_VALUE="$value"
+    # Si estamos en modo time, necesitamos convertir el valor del intervalo
+    # a un filtro de rango para jq
+    if [[ "$field" == "time" ]]; then
+        # Buscar el intervalo correspondiente en los arrays
+        local interval_index=-1
+        for i in "${!TIME_INTERVAL_LABELS[@]}"; do
+            if [[ "${TIME_INTERVAL_LABELS[$i]}" == "$value" ]]; then
+                interval_index=$i
+                break
+            fi
+        done
+        
+        if [[ $interval_index -eq -1 ]]; then
+            return 1  # Intervalo no encontrado
+        fi
+        
+        local min_val="${TIME_INTERVAL_MIN[$interval_index]}"
+        local max_val="${TIME_INTERVAL_MAX[$interval_index]}"
+        
+        # Construir condición de filtro para jq
+        if [[ "$max_val" == "inf" ]]; then
+            FILTER_FIELD="$field"
+            FILTER_VALUE=">=$min_val"  # Usaremos un formato especial para rango
+        else
+            FILTER_FIELD="$field"
+            FILTER_VALUE="range:$min_val:$max_val"  # Formato especial para rango
+        fi
+    else
+        FILTER_FIELD="$field"
+        FILTER_VALUE="$value"
+    fi
     
     # Reconfigurar según el periodo actual
     stop_tail

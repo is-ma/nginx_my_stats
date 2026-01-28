@@ -58,6 +58,13 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
+# Verificar que bc está instalado (necesario para comparaciones de float en modo time)
+if ! command -v bc &> /dev/null; then
+    echo "Error: bc no está instalado"
+    echo "Instalar con: sudo apt-get install bc"
+    exit 1
+fi
+
 # Procesar todas las opciones con nombre
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -146,13 +153,13 @@ fi
 if [[ -n "$FILTER_FIELD" ]]; then
     if [[ -z "${MODE_FIELD[$FILTER_FIELD]:-}" ]]; then
         echo "Error: Campo de filtro inválido: $FILTER_FIELD"
-        echo "Campos válidos: date, ip, method, status, ua, uri, cache, lang, referer, host"
+        echo "Campos válidos: date, ip, method, status, ua, uri, cache, lang, referer, host, time"
         exit 1
     fi
 fi
 
-# Iniciar según el periodo (solo si no estamos en modo log o time)
-if [[ "$CURRENT_MODE" != "log" && "$CURRENT_MODE" != "time" ]]; then
+# Iniciar según el periodo (solo si no estamos en modo log)
+if [[ "$CURRENT_MODE" != "log" ]]; then
     if [[ "$CURRENT_PERIOD" == "now" ]]; then
         start_tail
     else
@@ -161,17 +168,14 @@ if [[ "$CURRENT_MODE" != "log" && "$CURRENT_MODE" != "time" ]]; then
 elif [[ "$CURRENT_MODE" == "log" ]]; then
     list_log_files
 fi
-# Si el modo es "time", no hacemos nada - solo mostrará el mensaje
 
 # Loop principal
 while true; do
     # Generar contenido según el modo actual
     if [[ "$CURRENT_MODE" == "log" ]]; then
         content=$(render_log_selector_content)
-    elif [[ "$CURRENT_MODE" == "time" ]]; then
-        # Modo time - mostrar mensaje temporal
-        content="Estoy dentro de time."
     else
+        # Para todos los modos (incluyendo time), usar render_histogram_content
         content=$(render_histogram_content)
     fi
     render_screen "$content"

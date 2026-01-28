@@ -5,8 +5,24 @@ build_jq_expr() {
     local filter_value="$3"
 
     if [[ -n "$filter_field" ]]; then
-        # Usar contains para strings, == para números
-        if [[ "$filter_field" == "status" ]]; then
+        # Manejar filtros especiales para modo time
+        if [[ "$filter_field" == "time" ]]; then
+            # El filtro para time puede ser de rango
+            if [[ "$filter_value" == range:* ]]; then
+                # Formato: range:min:max
+                local range_part="${filter_value#range:}"
+                local min_val="${range_part%:*}"
+                local max_val="${range_part#*:}"
+                echo "select(.time | tonumber >= $min_val and .time | tonumber < $max_val) | $field"
+            elif [[ "$filter_value" == \>*=* ]]; then
+                # Formato: >=min (para último intervalo)
+                local min_val="${filter_value#>*=}"
+                echo "select(.time | tonumber >= $min_val) | $field"
+            else
+                # Filtro normal (para compatibilidad)
+                echo "select(.$filter_field | tostring | contains(\"$filter_value\")) | $field"
+            fi
+        elif [[ "$filter_field" == "status" ]]; then
             echo "select(.$filter_field == $filter_value) | $field"
         else
             echo "select(.$filter_field | tostring | contains(\"$filter_value\")) | $field"
@@ -98,18 +114,13 @@ change_mode() {
         return 0
     fi
     
-    # Si es modo time, detener tail y no cargar datos
-    if [[ "$new_mode" == "time" ]]; then
-        CURRENT_MODE="$new_mode"
-        stop_tail
-        return 0
-    fi
-    
     CURRENT_MODE="$new_mode"
+    
+    # Detener tail si existe
+    stop_tail
     
     # Si estamos en modo now, reiniciar tail con el nuevo campo
     if [[ "$CURRENT_PERIOD" == "now" ]]; then
-        stop_tail
         start_tail
     else
         # Para modos estáticos, recargar datos
